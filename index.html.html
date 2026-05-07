@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Omachala Palace Academy — Result Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #1a1f5e; --primary-light: #2d3494; --gold: #c0392b; --gold-light: #e74c3c;
+      --bg: #f0f2f8; --card: #ffffff; --text: #0d1117; --muted: #64748b;
+      --border: #cbd5e1; --danger: #dc2626; --success: #0d9488;
+      --radius: 14px; --shadow: 0 4px 24px rgba(26,31,94,0.12);
+      --accent: #b8860b; --accent-light: #d4a017;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .topbar { background: var(--primary); color: white; padding: 0 32px; height: 62px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.18); }
+    .topbar-brand { font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+    .topbar-brand span { color: var(--gold); }
+    .topbar-right { display: flex; gap: 10px; align-items: center; }
+    .nav-btn { background: transparent; border: 1.5px solid rgba(255,255,255,0.3); color: white; padding: 7px 18px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+    .nav-btn:hover { background: rgba(255,255,255,0.12); border-color: white; }
+    .nav-btn.gold { background: var(--gold); border-color: var(--gold); color: white; font-weight: 600; }
+    .nav-btn.gold:hover { background: var(--gold-light); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; background: transparent; border: none; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: white; border-radius: 2px; }
+    .mobile-menu { display: none; flex-direction: column; gap: 8px; background: var(--primary); padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu .nav-btn { width: 100%; text-align: center; }
+
+    .page { display: none; min-height: calc(100vh - 62px); }
+    .page.active { display: block; }
+
+    .hero { background: linear-gradient(135deg, #0d1117 0%, #1a1f5e 50%, #2d3494 100%); padding: 70px 20px 60px; text-align: center; color: white; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 5vw, 42px); margin-bottom: 10px; line-height: 1.2; }
+    .hero p { font-size: 15px; opacity: 0.82; margin-bottom: 36px; }
+    .search-card { background: white; max-width: 480px; margin: 0 auto; border-radius: var(--radius); padding: 32px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+    .search-card h3 { font-family: 'Playfair Display', serif; color: var(--primary); margin-bottom: 20px; font-size: 20px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .field input, .field select, .field textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: white; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,67,50,0.10); }
+    .field textarea { resize: vertical; min-height: 70px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; border-radius: 9px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+    .btn-gold { background: var(--gold); color: white; }
+    .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-outline:hover { background: var(--primary); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+
+    .alert { padding: 12px 16px; border-radius: 9px; font-size: 13px; font-weight: 500; margin: 12px 0; }
+    .alert-error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+    .alert-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+    .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+    .wrap-wide { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 24px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1.5px solid var(--border); }
+    .card-title { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 18px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    .subject-row { display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 0.7fr 0.6fr; gap: 8px; align-items: center; background: #f9fafb; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; margin-bottom: 8px; }
+    .subject-row .field { margin: 0; }
+    .subject-row .field input { padding: 8px 10px; font-size: 13px; }
+    .subject-label { display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 0.7fr 0.6fr; gap: 8px; padding: 0 12px; margin-bottom: 4px; }
+    .subject-label span { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+    .remove-btn { background: #fee2e2; color: var(--danger); border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 16px; font-weight: bold; }
+    .remove-btn:hover { background: #fecaca; }
+
+    .trait-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+    .trait-row:last-child { border-bottom: none; }
+    .trait-row label { font-size: 13px; font-weight: 500; }
+    .trait-row select { width: 160px; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 13px; }
+
+    /* ═══════════════════════════════════════
+       RESULT SLIP — AUTO-FIT TO A4
+    ═══════════════════════════════════════ */
+    #result-slip-page { background: #dde2ef; }
+    .slip-outer { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+    .slip { background: white; border-radius: 4px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); overflow: hidden; width: 210mm; max-width: 100%; transform-origin: top left; }
+    .slip-header { background: var(--primary); color: white; padding: 12px 24px; display: flex; align-items: center; gap: 14px; }
+
+    /* ══ LOGO — Change src="YOUR_LOGO_HERE.png" to your logo file ══ */
+    .slip-header-logo { width: 60px; height: 60px; object-fit: contain; border-radius: 6px; background: white; flex-shrink: 0; }
+    .slip-header-logo-placeholder { width: 60px; height: 60px; background: rgba(255,255,255,0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+
+    .slip-header-text { flex: 1; text-align: center; }
+    .slip-school { font-family: 'Playfair Display', serif; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+    .slip-subtitle { font-size: 11px; opacity: 0.8; margin-top: 2px; letter-spacing: 2px; text-transform: uppercase; }
+    .slip-title { background: var(--gold); color: white; text-align: center; padding: 7px; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+    .slip-body { padding: 12px 20px; }
+    .slip-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; margin-bottom: 10px; font-size: 11px; }
+    .slip-info-item { display: flex; gap: 4px; border-bottom: 1px dashed #ddd; padding: 3px 0; }
+    .slip-info-item strong { color: var(--primary); min-width: 100px; }
+    .slip-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 10px; }
+    .slip-table th { background: var(--primary); color: white; padding: 5px 6px; text-align: center; font-size: 10px; }
+    .slip-table td { padding: 4px 6px; border: 1px solid #ddd; text-align: center; }
+    .slip-table td:first-child { text-align: left; font-weight: 600; }
+    .slip-table tr:nth-child(even) td { background: #f1f5ff; }
+    .slip-traits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+    .slip-traits-box { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+    .slip-traits-box h4 { background: var(--primary); color: white; padding: 4px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .slip-trait-row { display: flex; justify-content: space-between; padding: 3px 10px; border-bottom: 1px solid #eee; font-size: 10.5px; }
+    .slip-trait-row:last-child { border-bottom: none; }
+    .slip-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+    .slip-stat { background: #eef1ff; border: 1px solid #c7ccf0; border-radius: 6px; padding: 6px; text-align: center; }
+    .slip-stat .val { font-size: 16px; font-weight: 700; color: var(--primary); font-family: 'Playfair Display', serif; }
+    .slip-stat .lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
+    .slip-remark { background: #fff0f0; border: 1px solid #fca5a5; border-radius: 6px; padding: 6px 12px; font-size: 10.5px; margin-bottom: 8px; }
+    .slip-remark strong { color: #991b1b; display: block; margin-bottom: 2px; font-size: 10px; text-transform: uppercase; }
+    .slip-next-term { display: flex; gap: 12px; font-size: 10.5px; margin-bottom: 8px; }
+    .slip-next-term div { background: #eef1ff; border-radius: 6px; padding: 5px 10px; flex: 1; text-align: center; }
+    .slip-next-term strong { display: block; color: var(--primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .slip-sigs { display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid #ddd; font-size: 10.5px; }
+    .slip-sig { text-align: center; }
+    .slip-sig .sig-line { width: 120px; border-top: 1.5px solid #333; margin: 18px auto 3px; }
+
+    /* ══ FOOTER: Only school name. Contact Us removed. ══ */
+    .slip-footer { text-align: center; font-size: 10px; color: #555; padding: 8px; border-top: 1px solid #eee; background: #fafafa; letter-spacing: 0.5px; font-weight: 600; }
+    .slip-footer span { color: var(--gold); font-weight: 700; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-left: 4px solid var(--gold); text-align: center; }
+    .stat-card .num { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--primary); font-weight: 700; }
+    .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .chart-box { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .chart-box h3 { font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 16px; }
+    .top-students-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .top-card { background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); border-top: 3px solid var(--gold); }
+    .top-card h4 { font-size: 13px; color: var(--primary); font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .top-student { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+    .top-student:last-child { border-bottom: none; }
+    .rank-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+    .rank-1 { background: #ffd700; color: #1a1a2e; }
+    .rank-2 { background: #c0c0c0; color: #1a1a2e; }
+    .rank-3 { background: #cd7f32; color: white; }
+    .at-risk-list { list-style: none; }
+    .at-risk-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+    .at-risk-item .name { font-weight: 600; }
+    .at-risk-item .meta { color: var(--muted); font-size: 12px; }
+    .fail-badge { background: var(--danger); color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+
+    .teacher-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+    .tabs { display: flex; gap: 4px; background: #f3f4f6; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+    .tab { flex: 1; padding: 9px; border: none; background: transparent; border-radius: 7px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.2s; }
+    .tab.active { background: white; color: var(--primary); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: var(--radius); padding: 32px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+    .modal-wide { max-width: 700px !important; }
+    .modal h2 { font-family: 'Playfair Display', serif; color: var(--primary); margin-bottom: 6px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+    .students-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .students-table th { background: var(--primary); color: white; padding: 10px 12px; text-align: left; font-size: 12px; }
+    .students-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+    .students-table tr:hover td { background: #f9fafb; }
+
+    .annual-hero { background: linear-gradient(135deg, #0d1117 0%, #1a1f5e 60%, #2d3494 100%); padding: 70px 20px 60px; text-align: center; color: white; }
+    .annual-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(24px, 5vw, 40px); margin-bottom: 10px; }
+    .annual-hero p { font-size: 15px; opacity: 0.82; margin-bottom: 36px; }
+    .annual-badge { display: inline-block; background: var(--gold); color: #1a1a2e; font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+    .annual-slip { background: white; border-radius: 4px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); overflow: hidden; }
+    .annual-slip-header { background: linear-gradient(135deg, #1a1f5e 0%, #2d3494 100%); color: white; padding: 20px 32px; display: flex; align-items: center; gap: 18px; }
+    .annual-slip-title { background: var(--gold); color: #1a1a2e; text-align: center; padding: 10px; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+    .annual-term-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 20px 0; }
+    .annual-term-box { background: #eef1ff; border: 1.5px solid #c7ccf0; border-radius: 10px; padding: 14px; text-align: center; }
+    .annual-term-box .term-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .annual-term-box .term-val { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--primary); font-weight: 700; }
+    .annual-final-box { background: linear-gradient(135deg, #1a1f5e 0%, #2d3494 100%); color: white; border-radius: 10px; padding: 20px; text-align: center; margin: 16px 0; }
+    .annual-final-box .fa-label { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .annual-final-box .fa-val { font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700; color: var(--gold); }
+    .annual-final-box .fa-grade { font-size: 18px; font-weight: 700; margin-top: 4px; }
+    .annual-status-badge { display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 10px; }
+    .annual-status-pass { background: #dcfce7; color: var(--success); }
+    .annual-status-fail { background: #fee2e2; color: var(--danger); }
+    .deploy-btn { background: linear-gradient(135deg, #1a1f5e 0%, #2d3494 100%); color: white; border: none; }
+    .deploy-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .progress-bar-wrap { background: #e5e7eb; border-radius: 20px; height: 8px; overflow: hidden; margin: 8px 0; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--gold)); border-radius: 20px; transition: width 0.4s ease; }
+
+    .deploy-status-bar { display: flex; align-items: center; gap: 12px; background: white; border-radius: 10px; padding: 10px 18px; box-shadow: var(--shadow); font-size: 13px; font-weight: 600; }
+    .blink-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+    .blink-green { background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.6); animation: blinkGreen 1.1s ease-in-out infinite; }
+    .blink-red { background: #dc2626; box-shadow: 0 0 0 0 rgba(220,38,38,0.6); animation: blinkRed 1.1s ease-in-out infinite; }
+    @keyframes blinkGreen { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.7); } 70% { box-shadow: 0 0 0 10px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+    @keyframes blinkRed { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.7); } 70% { box-shadow: 0 0 0 10px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
+    .btn-deploy-toggle { border: none; border-radius: 9px; padding: 10px 22px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-deploy-toggle.deploy { background: #16a34a; color: white; }
+    .btn-deploy-toggle.deploy:hover { background: #15803d; transform: translateY(-1px); }
+    .btn-deploy-toggle.undeploy { background: #dc2626; color: white; }
+    .btn-deploy-toggle.undeploy:hover { background: #b91c1c; transform: translateY(-1px); }
+    .result-gate-locked { text-align: center; padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .result-gate-locked .lock-icon { font-size: 56px; }
+    .result-gate-locked h2 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 22px; }
+    .result-gate-locked p { color: var(--muted); font-size: 14px; max-width: 380px; line-height: 1.6; }
+
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .mt-16 { margin-top: 16px; }
+    .flex { display: flex; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-8 { gap: 8px; }
+    .mb-16 { margin-bottom: 16px; }
+
+    @media (max-width: 768px) {
+      .topbar { padding: 0 16px; }
+      .topbar-brand { font-size: 14px; }
+      .topbar-right { display: none; }
+      .hamburger { display: flex; }
+      .chart-grid { grid-template-columns: 1fr; }
+      .teacher-header-btns { flex-wrap: wrap; }
+    }
+    @media (max-width: 640px) {
+      .grid-2, .grid-3, .slip-info-grid, .slip-traits-grid, .slip-summary, .annual-term-scores { grid-template-columns: 1fr; }
+      .subject-label { display: none; }
+      .subject-row { grid-template-columns: 1fr 1fr; }
+      .subject-row .field:first-child { grid-column: 1 / -1; }
+      .slip-body { padding: 10px; }
+      .teacher-wrap, .wrap, .wrap-wide { padding: 16px 12px; }
+      .slip-next-term { flex-direction: column; }
+      .slip-sigs { flex-direction: column; gap: 12px; }
+      .slip-header, .annual-slip-header { flex-direction: column; text-align: center; }
+      .slip-outer { padding: 16px 10px; }
+      .slip-actions { flex-direction: column; gap: 8px; }
+      .slip-actions .flex { flex-direction: column; width: 100%; }
+      .slip-actions .btn { width: 100%; justify-content: center; }
+    }
+
+    /* ═══════════════════════════════════════
+       PRINT — Force one A4 page
+    ═══════════════════════════════════════ */
+    @media print {
+      .topbar, .slip-actions, .hamburger, .mobile-menu { display: none !important; }
+      body { background: white; margin: 0; padding: 0; }
+      .slip, .annual-slip { box-shadow: none; }
+      #result-slip-page, #annual-slip-page { background: white; }
+      .slip-outer { padding: 0; margin: 0; max-width: 100%; }
+      #the-slip { width: 210mm; max-height: 297mm; overflow: hidden; page-break-after: avoid; page-break-inside: avoid; }
+      .slip-body { padding: 8px 16px; }
+      .slip-table { font-size: 9px; }
+      .slip-table th, .slip-table td { padding: 3px 5px; }
+      .slip-trait-row { font-size: 9px; padding: 2px 8px; }
+      .slip-info-item { font-size: 10px; padding: 2px 0; }
+      .slip-stat .val { font-size: 13px; }
+      .slip-stat .lbl { font-size: 8px; }
+      .slip-remark { font-size: 9px; padding: 5px 10px; }
+      .slip-sigs { padding-top: 8px; }
+      .slip-sig .sig-line { margin: 12px auto 2px; }
+      @page { size: A4 portrait; margin: 8mm; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-brand">🎓 <span>Omachala Palace Academy</span>&nbsp;— Result Management System</div>
+  <div class="topbar-right">
+    <button class="nav-btn" onclick="showPage('student-page')">Check Result</button>
+    <button class="nav-btn" onclick="showPage('annual-student-page')" style="border-color:var(--gold);color:var(--gold);">🏆 Annual Result</button>
+    <button class="nav-btn gold" onclick="openAdminModal()">Teacher Login</button>
+  </div>
+  <button class="hamburger" onclick="toggleMobileMenu()" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <button class="nav-btn" onclick="showPage('student-page');closeMobileMenu()">Check Result</button>
+  <button class="nav-btn" onclick="showPage('annual-student-page');closeMobileMenu()" style="border-color:var(--gold);color:var(--gold);">🏆 Annual Result</button>
+  <button class="nav-btn gold" onclick="openAdminModal();closeMobileMenu()">Teacher Login</button>
+</div>
+
+<!-- SCROLLING ADVERT BANNER -->
+<style>
+  .advert-ticker {
+    background: linear-gradient(90deg, #1a1f5e 0%, #c0392b 50%, #1a1f5e 100%);
+    color: white;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    border-bottom: 2px solid #c0392b;
+  }
+  .advert-ticker-inner {
+    display: inline-block;
+    animation: tickerScroll 38s linear infinite;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+  .advert-ticker-inner span.sep { color: #fca5a5; margin: 0 18px; font-size: 18px; }
+  @keyframes tickerScroll {
+    0%   { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+</style>
+<div class="advert-ticker" aria-label="School advertisement">
+  <div class="advert-ticker-inner">
+    🌟 Welcome to <strong>Omachala Palace Academy</strong> — The Best Place for Your Children to Receive Quality Education!
+    <span class="sep">★</span>
+    🎓 We are Fully Equipped with Highly Qualified, Dedicated, and Experienced Teachers Who Bring Out the Best in Every Child.
+    <span class="sep">★</span>
+    📚 At Omachala Palace Academy, We Provide a Nurturing Environment That Combines Academic Excellence with Strong Moral Values.
+    <span class="sep">★</span>
+    🏫 Our World-Class Facilities and Passionate Educators Ensure That Every Student Reaches Their Full Potential — Enrol Your Child Today!
+    <span class="sep">★</span>
+    ✨ Omachala Palace Academy — Where Excellence Meets Character, and Every Child Matters.
+    <span class="sep">★</span>
+    🌟 Welcome to <strong>Omachala Palace Academy</strong> — The Best Place for Your Children to Receive Quality Education!
+  </div>
+</div>
+
+<!-- PAGE 1: STUDENT SEARCH -->
+<div class="page active" id="student-page">
+  <div class="hero">
+    <h1>Student Result Portal</h1>
+    <p>Enter your details below to view and download your result slip</p>
+    <div style="max-width:480px;margin:0 auto 20px;">
+      <div class="deploy-status-bar" id="student-deploy-bar">
+        <span class="blink-dot blink-red" id="student-deploy-dot"></span>
+        <span id="student-deploy-label" style="color:var(--text);">Checking result availability...</span>
+      </div>
+    </div>
+    <div class="search-card hidden" id="student-gate-locked">
+      <div class="result-gate-locked">
+        <div class="lock-icon">&#128274;</div>
+        <h2>Results Not Yet Available</h2>
+        <p>Your results have not been released yet. Please check back later or contact your school administration.</p>
+      </div>
+    </div>
+    <div class="search-card hidden" id="student-search-card">
+      <h3>Check Your Result</h3>
+      <div class="field"><label>Full Name (as recorded)</label><input type="text" id="s-name" placeholder="e.g. John Adamu Bello"/></div>
+      <div class="field"><label>Student ID / Admission Number</label><input type="text" id="s-id" placeholder="e.g. STD/2024/001"/></div>
+      <div class="grid-2" style="gap:12px;margin-bottom:16px;">
+        <div class="field" style="margin:0"><label>Term</label>
+          <select id="s-term"><option value="">Select Term</option><option>First Term</option><option>Second Term</option><option>Third Term</option></select>
+        </div>
+        <div class="field" style="margin:0"><label>Session</label><input type="text" id="s-session" placeholder="e.g. 2024/2025"/></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="fetchStudentResult()">&#128269; View Result Slip</button>
+      <div id="s-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: RESULT SLIP -->
+<div class="page" id="result-slip-page">
+  <div class="slip-outer">
+    <div class="slip-actions flex-between mb-16">
+      <button class="btn btn-outline" onclick="showPage('student-page')">← Back to Search</button>
+      <div class="flex gap-8">
+        <button class="btn btn-primary" onclick="downloadPDF()">⬇ Download PDF</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨 Print</button>
+      </div>
+    </div>
+    <div class="slip" id="the-slip">
+      <div class="slip-header">
+
+        <!-- ════════════════════════════════════════════════
+             SCHOOL LOGO — Replace src value with your logo
+             Examples:
+               src="images/logo.png"
+               src="https://yourwebsite.com/logo.png"
+        ════════════════════════════════════════════════ -->
+        <img
+          id="slip-logo"
+          class="slip-header-logo"
+          src="YOUR_LOGO_HERE.png"
+          alt="School Logo"
+          onerror="this.style.display='none';document.getElementById('slip-logo-placeholder').style.display='flex'"
+        />
+        <!-- ════════════════════════════════════════════════ -->
+
+        <div id="slip-logo-placeholder" class="slip-header-logo-placeholder" style="display:none;">🎓</div>
+        <div class="slip-header-text">
+          <div class="slip-school" id="slip-school">SCHOOL NAME</div>
+          <div class="slip-subtitle">Student Academic Report</div>
+        </div>
+      </div>
+      <div class="slip-title" id="slip-term-session">FIRST TERM RESULT — 2024/2025</div>
+      <div class="slip-body">
+        <div class="slip-info-grid" id="slip-info-grid"></div>
+        <table class="slip-table">
+          <thead><tr><th style="text-align:left">Subject</th><th>CA1</th><th>CA2</th><th>CA3</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th><th>Position</th></tr></thead>
+          <tbody id="slip-subjects"></tbody>
+        </table>
+        <div class="slip-summary" id="slip-summary"></div>
+        <div class="slip-traits-grid">
+          <div class="slip-traits-box">
+            <h4>Psychomotor &amp; Behavioural Traits</h4>
+            <div id="slip-traits"></div>
+          </div>
+          <div class="slip-traits-box">
+            <h4>Grading Key</h4>
+            <div class="slip-trait-row"><span>A — 75 &amp; Above</span><span>Distinction</span></div>
+            <div class="slip-trait-row"><span>B — 65–74</span><span>Very Good</span></div>
+            <div class="slip-trait-row"><span>C — 55–64</span><span>Good</span></div>
+            <div class="slip-trait-row"><span>D — 40–54</span><span>Fair</span></div>
+            <div class="slip-trait-row"><span>E — 0–39</span><span>Poor</span></div>
+          </div>
+        </div>
+        <div class="slip-remark"><strong>Teacher's Remark</strong><span id="slip-remark">—</span></div>
+        <div class="slip-next-term" id="slip-next-term"></div>
+        <div class="slip-sigs">
+          <div class="slip-sig"><div class="sig-line"></div><div>Class Teacher</div></div>
+          <div class="slip-sig"><div class="sig-line"></div><div id="slip-principal">Principal</div></div>
+          <div class="slip-sig"><div class="sig-line"></div><div>Date</div></div>
+        </div>
+      </div>
+      <!-- FOOTER: School name only. Contact Us removed. -->
+      <div class="slip-footer">
+        Omachala Palace Academy &nbsp;&mdash;&nbsp; <span>Excellence in Education</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: TEACHER PORTAL -->
+<div class="page" id="teacher-page">
+  <div class="teacher-wrap">
+    <div class="flex-between mb-16" style="flex-wrap:wrap;gap:12px;">
+      <div>
+        <h2 style="font-family:'Playfair Display',serif;color:var(--primary);font-size:22px;">Teacher Portal</h2>
+        <p style="font-size:13px;color:var(--muted);">Upload and manage student results</p>
+      </div>
+      <div class="flex gap-8 teacher-header-btns">
+        <div class="deploy-status-bar" style="padding:7px 14px;gap:10px;">
+          <span class="blink-dot" id="teacher-deploy-dot"></span>
+          <span id="teacher-deploy-label" style="font-size:12px;color:var(--text);"></span>
+        </div>
+        <button class="btn-deploy-toggle" id="teacher-deploy-btn" onclick="toggleResultDeployment()">⏳ Loading...</button>
+        <button class="btn btn-gold" onclick="showPage('analytics-page');loadAnalytics()">&#128202; Terminal Report</button>
+        <button class="btn deploy-btn" onclick="openDeployModal()">&#127942; Deploy Annual Result</button>
+        <button class="btn btn-success" onclick="openSendEmailModal()">&#128231; Send Results to Parents</button>
+        <button class="btn btn-outline" onclick="teacherLogout()">Logout</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('upload-tab',this)">➕ Upload Result</button>
+      <button class="tab" onclick="switchTab('manage-tab',this);loadStudentList()">📋 Manage Students</button>
+    </div>
+    <div id="upload-tab">
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Student Bio Data</span></div>
+        <div class="grid-2">
+          <div class="field"><label>School Name</label><input id="t-school" value="OMACHALA PALACE ACADEMY"/></div>
+          <div class="field"><label>Student Full Name *</label><input id="t-name" placeholder="Full name as it will appear on result"/></div>
+          <div class="field"><label>Student ID / Admission No *</label><input id="t-id" placeholder="e.g. STD/2024/001"/></div>
+          <div class="field"><label>Gender *</label><select id="t-gender"><option value="">Select Gender</option><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div class="field"><label>Age</label><input type="number" id="t-age" placeholder="Age"/></div>
+          <div class="field"><label>Class *</label><input id="t-class" placeholder="e.g. JSS 1A"/></div>
+          <div class="field"><label>Term *</label><select id="t-term"><option value="">Select Term</option><option>First Term</option><option>Second Term</option><option>Third Term</option></select></div>
+          <div class="field"><label>Session *</label><input id="t-session" placeholder="e.g. 2024/2025"/></div>
+          <div class="field"><label>Parent Email (optional)</label><input type="email" id="t-email" placeholder="parent@email.com"/></div>
+          <div class="field"><label>Parent Phone</label><input id="t-phone" placeholder="Phone number"/></div>
+          <div class="field"><label>Next Term Begins</label><input type="date" id="t-next-begin"/></div>
+          <div class="field"><label>Next Term Ends</label><input type="date" id="t-next-end"/></div>
+        </div>
+        <div class="field"><label>Principal Name</label><input id="t-principal" placeholder="Principal's full name"/></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Psychomotor &amp; Behavioural Traits</span></div>
+        <div class="grid-2">
+          <div>
+            <div class="trait-row"><label>Neatness</label><select id="tr-neatness"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Obedience</label><select id="tr-obedience"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Punctuality</label><select id="tr-punctuality"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+          </div>
+          <div>
+            <div class="trait-row"><label>Attentiveness</label><select id="tr-attentiveness"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Initiative</label><select id="tr-initiative"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Self Control</label><select id="tr-selfcontrol"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Subject Scores</span>
+          <button class="btn btn-gold" onclick="addSubjectRow()" style="padding:8px 16px;font-size:13px;">+ Add Subject</button>
+        </div>
+        <div class="subject-label">
+          <span>Subject Name</span><span>CA1</span><span>CA2</span><span>CA3</span><span>Exam</span><span>Total</span><span>Del</span>
+        </div>
+        <div id="subjects-container"></div>
+        <div class="field mt-16">
+          <label>Teacher's Remark (auto-generated — you may edit)</label>
+          <textarea id="t-remark" rows="2"></textarea>
+        </div>
+      </div>
+      <div id="upload-status"></div>
+      <button class="btn btn-primary btn-full" style="padding:14px;" onclick="saveStudent()">💾 Save Student Result</button>
+    </div>
+    <div id="manage-tab" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Uploaded Students</span>
+          <div class="flex gap-8" style="flex-wrap:wrap;">
+            <input id="filter-class" placeholder="Filter by class" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;" oninput="filterStudents()"/>
+            <input id="filter-term" placeholder="Filter by term" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;" oninput="filterStudents()"/>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="students-table">
+            <thead><tr><th>Name</th><th>ID</th><th>Class</th><th>Term</th><th>Session</th><th>Total</th><th>Actions</th></tr></thead>
+            <tbody id="students-tbody"></tbody>
+          </table>
+        </div>
+        <div id="manage-status" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: ANALYTICS -->
+<div class="page" id="analytics-page">
+  <div class="wrap-wide">
+    <div class="flex-between mb-16" style="flex-wrap:wrap;gap:12px;">
+      <div>
+        <h2 style="font-family:'Playfair Display',serif;color:var(--primary);font-size:24px;">📊 Terminal Report</h2>
+        <p style="font-size:13px;color:var(--muted);">School-wide performance analysis</p>
+      </div>
+      <div class="flex gap-8" style="flex-wrap:wrap;">
+        <select id="analytics-term" onchange="loadAnalytics()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;">
+          <option value="">All Terms</option><option>First Term</option><option>Second Term</option><option>Third Term</option>
+        </select>
+        <input id="analytics-session" placeholder="Session e.g. 2024/2025" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;" oninput="loadAnalytics()"/>
+        <button class="btn btn-outline" onclick="showPage('teacher-page')">← Back</button>
+      </div>
+    </div>
+    <div id="analytics-loading" class="text-center" style="padding:40px;color:var(--muted);">Loading analytics...</div>
+    <div id="analytics-content" class="hidden">
+      <div class="stats-grid" id="a-stats"></div>
+      <div class="chart-grid">
+        <div class="chart-box"><h3>Gender Performance Comparison</h3><canvas id="chart-gender"></canvas></div>
+        <div class="chart-box"><h3>Class Performance Ranking</h3><canvas id="chart-class"></canvas></div>
+        <div class="chart-box"><h3>Grade Distribution</h3><canvas id="chart-grades"></canvas></div>
+        <div class="chart-box"><h3>Subject Average Scores</h3><canvas id="chart-subjects"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">🏆 Top 3 Students Per Class</span></div>
+        <div class="top-students-grid" id="a-top-students"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">⚠️ At-Risk Students (Failed 3+ Subjects)</span></div>
+        <ul class="at-risk-list" id="a-at-risk"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: ANNUAL STUDENT PORTAL -->
+<div class="page" id="annual-student-page">
+  <div class="annual-hero">
+    <div class="annual-badge">🏆 Annual Result Portal</div>
+    <h1>Annual Academic Result</h1>
+    <p>Enter your details below to view your full-year cumulative result</p>
+    <div class="search-card">
+      <h3 style="color:#0f3460;">Check Annual Result</h3>
+      <div class="alert alert-info" style="font-size:12px;margin-bottom:16px;">This portal shows annual results only. For term results, use the <a href="#" onclick="showPage('student-page')" style="color:#1d4ed8;font-weight:600;">Term Result Portal</a>.</div>
+      <div class="field"><label>Student ID / Admission Number</label><input type="text" id="as-id" placeholder="e.g. STD/2024/001"/></div>
+      <div class="field"><label>Session</label><input type="text" id="as-session" placeholder="e.g. 2024/2025"/></div>
+      <button class="btn btn-full" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;padding:12px;" onclick="fetchAnnualResult()">🔍 View Annual Result</button>
+      <div id="as-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 6: ANNUAL RESULT SLIP -->
+<div class="page" id="annual-slip-page" style="background:#e8e8f0;">
+  <div class="slip-outer">
+    <div class="slip-actions flex-between mb-16">
+      <button class="btn btn-outline" onclick="showPage('annual-student-page')">← Back to Annual Portal</button>
+      <button class="btn" style="background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;" onclick="downloadAnnualPDF()">⬇ Download PDF</button>
+    </div>
+    <div class="annual-slip" id="the-annual-slip">
+      <div class="annual-slip-header">
+
+        <!-- ════════════════════════════════════════════════
+             ANNUAL SLIP LOGO — Replace src with your logo
+        ════════════════════════════════════════════════ -->
+        <img
+          id="annual-slip-logo"
+          class="slip-header-logo"
+          src="YOUR_LOGO_HERE.png"
+          alt="School Logo"
+          onerror="this.style.display='none'"
+        />
+        <!-- ════════════════════════════════════════════════ -->
+
+        <div class="slip-header-text">
+          <div class="slip-school" id="annual-slip-school">SCHOOL NAME</div>
+          <div class="slip-subtitle">Annual Academic Report</div>
+        </div>
+      </div>
+      <div class="annual-slip-title" id="annual-slip-session-label">ANNUAL RESULT — 2024/2025</div>
+      <div class="slip-body">
+        <div class="slip-info-grid" id="annual-slip-info-grid"></div>
+        <div class="annual-term-scores" id="annual-term-scores"></div>
+        <div class="annual-final-box" id="annual-final-box"></div>
+        <div class="slip-traits-box" style="margin-bottom:20px;">
+          <h4>Grading Key</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;">
+            <div class="slip-trait-row"><span>A — 75 &amp; Above</span><span>Distinction</span></div>
+            <div class="slip-trait-row"><span>B — 65–74</span><span>Very Good</span></div>
+            <div class="slip-trait-row"><span>C — 55–64</span><span>Good</span></div>
+            <div class="slip-trait-row"><span>D — 40–54</span><span>Fair</span></div>
+            <div class="slip-trait-row"><span>E — 0–39</span><span>Poor</span></div>
+          </div>
+        </div>
+        <div class="slip-sigs">
+          <div class="slip-sig"><div class="sig-line"></div><div>Class Teacher</div></div>
+          <div class="slip-sig"><div class="sig-line"></div><div id="annual-slip-principal">Principal</div></div>
+          <div class="slip-sig"><div class="sig-line"></div><div>Date</div></div>
+        </div>
+      </div>
+      <!-- FOOTER: School name only -->
+      <div class="slip-footer">
+        Omachala Palace Academy &nbsp;&mdash;&nbsp; <span>Excellence in Education</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay" id="admin-modal">
+  <div class="modal">
+    <h2>Teacher Login</h2>
+    <p>Enter your credentials to access the upload portal</p>
+    <div class="field"><label>Email</label><input type="email" id="admin-email" placeholder="teacher@school.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="admin-pass" placeholder="Your password"/></div>
+    <div id="admin-status"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-primary btn-full" onclick="doAdminLogin()">Login</button>
+      <button class="btn btn-outline" onclick="closeAdminModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND EMAIL MODAL -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <h2>Send Results to Parents</h2>
+    <p>PDF result slips will be sent to all parents with an email address on file.</p>
+    <div class="field"><label>Filter by Term</label>
+      <select id="em-term"><option value="">All Terms</option><option>First Term</option><option>Second Term</option><option>Third Term</option></select>
+    </div>
+    <div class="field"><label>Filter by Session</label><input id="em-session" placeholder="e.g. 2024/2025"/></div>
+    <div id="email-status"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-success btn-full" onclick="sendResultsToParents()">📧 Send All Emails</button>
+      <button class="btn btn-outline" onclick="document.getElementById('email-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT STUDENT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="max-width:700px;width:95%;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <h2 style="margin:0;">✏️ Edit Student Record</h2>
+      <button onclick="closeEditModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <p>Edit bio data and subject scores before deploying for students to see.</p>
+    <input type="hidden" id="edit-db-id"/>
+
+    <div style="max-height:65vh;overflow-y:auto;padding-right:6px;">
+      <!-- BIO DATA -->
+      <div style="background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">📋 Bio Data</div>
+        <div class="grid-2">
+          <div class="field"><label>Full Name *</label><input id="edit-name" placeholder="Student full name"/></div>
+          <div class="field"><label>Student ID *</label><input id="edit-id" placeholder="e.g. STD/2024/001"/></div>
+          <div class="field"><label>Gender</label><select id="edit-gender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div class="field"><label>Age</label><input type="number" id="edit-age" placeholder="Age"/></div>
+          <div class="field"><label>Class *</label><input id="edit-class" placeholder="e.g. JSS 1A"/></div>
+          <div class="field"><label>Term *</label><select id="edit-term"><option value="">Select Term</option><option>First Term</option><option>Second Term</option><option>Third Term</option></select></div>
+          <div class="field"><label>Session *</label><input id="edit-session" placeholder="e.g. 2024/2025"/></div>
+          <div class="field"><label>School Name</label><input id="edit-school" placeholder="School name"/></div>
+          <div class="field"><label>Parent Email</label><input type="email" id="edit-email" placeholder="parent@email.com"/></div>
+          <div class="field"><label>Parent Phone</label><input id="edit-phone" placeholder="Phone number"/></div>
+          <div class="field"><label>Next Term Begins</label><input type="date" id="edit-next-begin"/></div>
+          <div class="field"><label>Next Term Ends</label><input type="date" id="edit-next-end"/></div>
+        </div>
+        <div class="field"><label>Principal Name</label><input id="edit-principal" placeholder="Principal's full name"/></div>
+      </div>
+
+      <!-- TRAITS -->
+      <div style="background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">🧠 Psychomotor &amp; Behavioural Traits</div>
+        <div class="grid-2">
+          <div>
+            <div class="trait-row"><label>Neatness</label><select id="edit-neatness"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Obedience</label><select id="edit-obedience"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Punctuality</label><select id="edit-punctuality"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+          </div>
+          <div>
+            <div class="trait-row"><label>Attentiveness</label><select id="edit-attentiveness"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Initiative</label><select id="edit-initiative"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+            <div class="trait-row"><label>Self Control</label><select id="edit-selfcontrol"><option value="5">A — Excellent</option><option value="4">B — Good</option><option value="3">C — Fair</option><option value="2">D — Weak</option><option value="1">E — Poor</option></select></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBJECT SCORES -->
+      <div style="background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;">📚 Subject Scores</div>
+          <button class="btn btn-gold" onclick="addEditSubjectRow()" style="padding:6px 14px;font-size:12px;">+ Add Subject</button>
+        </div>
+        <div class="subject-label">
+          <span>Subject Name</span><span>CA1</span><span>CA2</span><span>CA3</span><span>Exam</span><span>Total</span><span>Del</span>
+        </div>
+        <div id="edit-subjects-container"></div>
+        <div class="field" style="margin-top:12px;">
+          <label>Teacher's Remark</label>
+          <textarea id="edit-remark" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div id="edit-status" style="margin:8px 0;"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn btn-primary btn-full" onclick="saveEditedStudent()" id="edit-save-btn">💾 Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEPLOY ANNUAL RESULT MODAL -->
+<div class="modal-overlay" id="deploy-modal">
+  <div class="modal" style="max-width:560px;">
+    <h2>🏆 Deploy Annual Result</h2>
+    <p>This will collect each student's 1st, 2nd, and 3rd term averages and publish their annual result.</p>
+
+    <div class="field" style="margin-top:12px;"><label>Session *</label><input id="deploy-session" placeholder="e.g. 2024/2025"/></div>
+    <div id="deploy-status"></div>
+    <div class="hidden" id="deploy-progress-wrap" style="margin-top:8px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" id="deploy-progress-label">Processing...</div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="deploy-progress-bar" style="width:0%"></div></div>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn deploy-btn btn-full" onclick="deployAnnualResult()" id="deploy-btn">🚀 Deploy Now</button>
+      <button class="btn btn-outline" onclick="document.getElementById('deploy-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASS_MARK            = 40;
+const AT_RISK_SCORE        = 40;
+const AT_RISK_MIN_SUBJECTS = 3;
+
+const SUPABASE_URL  = "https://jlpdawitehjyyhpzxzdl.supabase.co";
+const SUPABASE_ANON = "sb_publishable_OkOf6Hejql0QW4wY1FSq4w_b5rt-B16";
+const FROM_EMAIL    = "results@yourdomain.com";
+
+// ════════════════════════════════════════════════════
+// SCHOOL LOGO — change this to your actual logo path
+// ════════════════════════════════════════════════════
+const SCHOOL_LOGO_URL = "YOUR_LOGO_HERE.png";
+// ════════════════════════════════════════════════════
+
+const SCHOOL_CONTACTS = {
+  phone:"YOUR PHONE NUMBER HERE", phone2:"YOUR SECOND PHONE NUMBER HERE",
+  email:"YOUR EMAIL ADDRESS HERE", whatsapp:"YOUR WHATSAPP NUMBER HERE",
+  website:"YOUR WEBSITE HERE"
+};
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+function toggleMobileMenu(){document.getElementById('mobile-menu').classList.toggle('open');}
+function closeMobileMenu(){document.getElementById('mobile-menu').classList.remove('open');}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function switchTab(tabId,btn){
+  ['upload-tab','manage-tab'].forEach(t=>document.getElementById(t).classList.add('hidden'));
+  document.getElementById(tabId).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+const clean=s=>(s||'').toString().trim().toLowerCase();
+
+function getGrade(t){
+  if(t>=75)return'A';if(t>=65)return'B';if(t>=55)return'C';
+  if(t>=40)return'D';return'E';
+}
+
+function getGradeRemark(g){
+  return({'A':'Distinction','B':'Very Good','C':'Good','D':'Fair','E':'Poor'})[g]||'';
+}
+
+function getAutoRemark(avg){
+  if(avg>=75)return"An outstanding Distinction! This student demonstrates exceptional academic ability. Keep soaring higher!";
+  if(avg>=65)return"Very Good performance this term. A commendable result that reflects hard work and dedication. Well done!";
+  if(avg>=55)return"Good performance this term. With continued focus and effort, even greater heights are achievable.";
+  if(avg>=40)return"A fair performance. There is clear potential here — more consistent effort will yield better results next term.";
+  return"This result requires urgent attention. We strongly recommend extra coaching and closer parental involvement this holiday.";
+}
+
+function mapTraitGrade(v){return({'5':'A — Excellent','4':'B — Good','3':'C — Fair','2':'D — Weak','1':'E — Poor'})[String(v)]||v;}
+function getOrdinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function fmt(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-NG',{day:'numeric',month:'long',year:'numeric'});}
+function setStatus(id,msg,type='info'){const el=document.getElementById(id);if(!el)return;el.innerHTML=msg?`<div class="alert alert-${type}">${msg}</div>`:'';}
+// Standard Competition Ranking: tied students share same position, next rank skips
+// e.g. two 1st place → next is 3rd (not 2nd)
+function denseRank(myScore,allScores){return allScores.filter(s=>s>myScore).length+1;}
+
+function openAdminModal(){document.getElementById('admin-modal').classList.add('open');}
+function closeAdminModal(){document.getElementById('admin-modal').classList.remove('open');}
+
+async function doAdminLogin(){
+  const email=document.getElementById('admin-email').value.trim();
+  const pass=document.getElementById('admin-pass').value;
+  if(!email||!pass){setStatus('admin-status','Please enter email and password','error');return;}
+  setStatus('admin-status','⏳ Logging in...','info');
+  const{error}=await db.auth.signInWithPassword({email,password:pass});
+  if(error){setStatus('admin-status','❌ Invalid email or password.','error');return;}
+  closeAdminModal();showPage('teacher-page');addSubjectRow();
+}
+
+async function teacherLogout(){await db.auth.signOut();showPage('student-page');}
+
+async function checkSession(){
+  const{data}=await db.auth.getSession();
+  if(data.session){showPage('teacher-page');addSubjectRow();}
+  loadDeployStatus();
+}
+
+let currentDeployState=false;
+
+async function loadDeployStatus(){
+  try{
+    const{data,error}=await db.from('deploy_settings').select('value').eq('key','term_result_deployed').maybeSingle();
+    if(error){applyDeployUI(false);return;}
+    const deployed=data?(data.value==='true'||data.value===true):false;
+    applyDeployUI(deployed);
+  }catch(e){applyDeployUI(false);}
+}
+
+function applyDeployUI(deployed){
+  currentDeployState=deployed;
+  const dot=document.getElementById('student-deploy-dot');
+  const label=document.getElementById('student-deploy-label');
+  const card=document.getElementById('student-search-card');
+  const locked=document.getElementById('student-gate-locked');
+  if(dot)dot.className='blink-dot '+(deployed?'blink-green':'blink-red');
+  if(label){label.textContent=deployed?'✅ Results are now available — you may check below':'🔴 Results have not been released yet';label.style.color=deployed?'#15803d':'#b91c1c';}
+  if(card)card.classList.toggle('hidden',!deployed);
+  if(locked)locked.classList.toggle('hidden',deployed);
+  const tDot=document.getElementById('teacher-deploy-dot');
+  const tLabel=document.getElementById('teacher-deploy-label');
+  const tBtn=document.getElementById('teacher-deploy-btn');
+  if(tDot)tDot.className='blink-dot '+(deployed?'blink-green':'blink-red');
+  if(tLabel){tLabel.textContent=deployed?'Results: LIVE':'Results: LOCKED';tLabel.style.color=deployed?'#15803d':'#b91c1c';}
+  if(tBtn){if(deployed){tBtn.textContent='🔴 Stop Deployment';tBtn.className='btn-deploy-toggle undeploy';}else{tBtn.textContent='🟢 Deploy Results';tBtn.className='btn-deploy-toggle deploy';}}
+}
+
+async function toggleResultDeployment(){
+  const btn=document.getElementById('teacher-deploy-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Please wait...';}
+  const newState=!currentDeployState;
+  try{
+    const{error}=await db.from('deploy_settings').upsert({key:'term_result_deployed',value:String(newState)},{onConflict:'key'});
+    if(error){console.error(error);alert('❌ Could not update deployment status.');if(btn)btn.disabled=false;applyDeployUI(currentDeployState);return;}
+    applyDeployUI(newState);
+  }catch(e){console.error(e);if(btn)btn.disabled=false;applyDeployUI(currentDeployState);}
+  if(btn)btn.disabled=false;
+}
+
+function addSubjectRow(){
+  const c=document.getElementById('subjects-container');
+  const d=document.createElement('div');
+  d.className='subject-row';
+  d.innerHTML=`
+    <div class="field"><input class="subj-name" placeholder="Subject name"/></div>
+    <div class="field"><input class="subj-ca1" type="number" min="0" max="100" placeholder="0" oninput="calcTotal(this)"/></div>
+    <div class="field"><input class="subj-ca2" type="number" min="0" max="100" placeholder="0" oninput="calcTotal(this)"/></div>
+    <div class="field"><input class="subj-ca3" type="number" min="0" max="100" placeholder="0" oninput="calcTotal(this)"/></div>
+    <div class="field"><input class="subj-exam" type="number" min="0" max="100" placeholder="0" oninput="calcTotal(this)"/></div>
+    <div class="field"><input class="subj-total" readonly style="background:#f0f7f4;font-weight:700;color:var(--primary);" placeholder="0"/></div>
+    <button class="remove-btn" onclick="this.parentElement.remove();updateRemark()">✕</button>`;
+  c.appendChild(d);
+}
+
+function calcTotal(inp){
+  const row=inp.closest('.subject-row');
+  const t=['ca1','ca2','ca3','exam'].map(c=>Number(row.querySelector('.subj-'+c).value)||0).reduce((a,b)=>a+b,0);
+  row.querySelector('.subj-total').value=t;
+  updateRemark();
+}
+
+function updateRemark(){
+  const rows=document.querySelectorAll('.subject-row');
+  let sum=0,cnt=0;
+  rows.forEach(r=>{const t=Number(r.querySelector('.subj-total').value)||0;if(t>0){sum+=t;cnt++;}});
+  if(cnt>0)document.getElementById('t-remark').value=getAutoRemark(sum/cnt);
+}
+
+async function saveStudent(){
+  const name=document.getElementById('t-name').value.trim();
+  const id=document.getElementById('t-id').value.trim();
+  const term=document.getElementById('t-term').value;
+  const session=document.getElementById('t-session').value.trim();
+  const cls=document.getElementById('t-class').value.trim();
+  if(!name||!id||!term||!session||!cls){setStatus('upload-status','❌ Please fill all required fields marked with *','error');return;}
+  const rows=document.querySelectorAll('.subject-row');
+  if(!rows.length){setStatus('upload-status','❌ Add at least one subject','error');return;}
+  const subjects=[];
+  for(const r of rows){
+    const sn=r.querySelector('.subj-name').value.trim();
+    if(!sn){setStatus('upload-status','❌ All subject names must be filled','error');return;}
+    const ca1=Number(r.querySelector('.subj-ca1').value)||0;
+    const ca2=Number(r.querySelector('.subj-ca2').value)||0;
+    const ca3=Number(r.querySelector('.subj-ca3').value)||0;
+    const exam=Number(r.querySelector('.subj-exam').value)||0;
+    for(const[label,val]of[['CA1',ca1],['CA2',ca2],['CA3',ca3],['Exam',exam]]){
+      if(val<0||val>100){setStatus('upload-status',`❌ ${label} score for "${sn}" must be 0–100`,'error');return;}
+    }
+    const total=ca1+ca2+ca3+exam;
+    subjects.push({subject:sn,ca1,ca2,ca3,exam,total,grade:getGrade(total)});
+  }
+  const grandTotal=subjects.reduce((a,s)=>a+s.total,0);
+  const average=parseFloat((grandTotal/subjects.length).toFixed(2));
+  const payload={
+    name,student_id:id,
+    gender:document.getElementById('t-gender').value,
+    age:document.getElementById('t-age').value,
+    school_name:document.getElementById('t-school').value.trim(),
+    class_name:cls,term,session,
+    email:document.getElementById('t-email').value.trim(),
+    phone:document.getElementById('t-phone').value.trim(),
+    neatness:document.getElementById('tr-neatness').value,
+    obedience:document.getElementById('tr-obedience').value,
+    punctuality:document.getElementById('tr-punctuality').value,
+    attentiveness:document.getElementById('tr-attentiveness').value,
+    initiative:document.getElementById('tr-initiative').value,
+    self_control:document.getElementById('tr-selfcontrol').value,
+    teacher_remark:document.getElementById('t-remark').value.trim(),
+    principal_name:document.getElementById('t-principal').value.trim(),
+    next_term_begins:document.getElementById('t-next-begin').value||null,
+    next_term_ends:document.getElementById('t-next-end').value||null,
+    subjects,grand_total:grandTotal,average
+  };
+  setStatus('upload-status','⏳ Saving student result...','info');
+  const{data:existing}=await db.from('students').select('id').eq('student_id',id).eq('term',term).eq('session',session).maybeSingle();
+  let error;
+  if(existing){({error}=await db.from('students').update(payload).eq('id',existing.id));}
+  else{({error}=await db.from('students').insert(payload));}
+  if(error){console.error(error);setStatus('upload-status','❌ Could not save result. Please try again.','error');return;}
+  setStatus('upload-status',`✅ Result for <strong>${name}</strong> saved successfully!`,'success');
+  document.getElementById('subjects-container').innerHTML='';
+  addSubjectRow();
+  ['t-name','t-id','t-age','t-class','t-session','t-email','t-phone','t-remark'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  document.getElementById('t-gender').value='';
+  document.getElementById('t-term').value='';
+}
+
+async function fetchStudentResult(){
+  const nameRaw=document.getElementById('s-name').value.trim();
+  const idRaw=document.getElementById('s-id').value.trim();
+  const term=document.getElementById('s-term').value.trim();
+  const session=document.getElementById('s-session').value.trim();
+  if(!nameRaw||!idRaw||!term||!session){setStatus('s-status','❌ Please fill all fields','error');return;}
+  setStatus('s-status','⏳ Searching for your result...','info');
+  const normName=nameRaw.replace(/\s+/g,' ').trim();
+  const normId=idRaw.replace(/\s+/g,' ').trim();
+  let{data:byId,error:err1}=await db.from('students').select('*').ilike('student_id',normId).ilike('term',term).ilike('session',session);
+  if(err1){setStatus('s-status','❌ A database error occurred. Please try again.','error');return;}
+  let student=null;
+  if(byId&&byId.length>0){
+    student=byId.find(s=>(s.name||'').replace(/\s+/g,' ').trim().toLowerCase()===normName.toLowerCase());
+    if(!student){student=byId.find(s=>{const n=(s.name||'').replace(/\s+/g,' ').trim().toLowerCase();return n.includes(normName.toLowerCase())||normName.toLowerCase().includes(n);});}
+  }
+  if(!student){
+    let{data:byName,error:err2}=await db.from('students').select('*').ilike('name',`%${normName}%`).ilike('term',term).ilike('session',session);
+    if(!err2&&byName&&byName.length>0){student=byName.find(s=>(s.student_id||'').replace(/\s+/g,' ').trim().toLowerCase()===normId.toLowerCase())||byName[0];}
+  }
+  if(!student){setStatus('s-status',`❌ No result found for <strong>${nameRaw}</strong> (ID: ${idRaw}) in <strong>${term}, ${session}</strong>.<br/><small>Check your name, ID, term and session are entered exactly as recorded.</small>`,'error');return;}
+  const{data:allPeers}=await db.from('students').select('student_id,grand_total,subjects').ilike('school_name',student.school_name||'').ilike('class_name',student.class_name||'').ilike('term',student.term||'').ilike('session',student.session||'');
+  const peers=allPeers||[];
+  const classTotal=peers.length||1;
+  const allTotals=peers.map(p=>p.grand_total||0);
+  const classPos=denseRank(student.grand_total||0,allTotals);
+  const subjectsWithPos=(student.subjects||[]).map(s=>{
+    const myScore=s.total||0;
+    const allSubjectScores=peers.map(p=>{const found=(p.subjects||[]).find(x=>clean(x.subject)===clean(s.subject));return found?(found.total||0):0;});
+    return{...s,position:denseRank(myScore,allSubjectScores)};
+  });
+  setStatus('s-status','','info');
+  renderResultSlip(student,classPos,classTotal,subjectsWithPos);
+  showPage('result-slip-page');
+}
+
+let appState={student:null,classPos:0,classTotal:0,subjects:[]};
+
+function renderResultSlip(student,classPos,classTotal,subjects){
+  appState={student,classPos,classTotal,subjects};
+  document.getElementById('slip-logo').src=SCHOOL_LOGO_URL;
+  document.getElementById('slip-school').textContent=(student.school_name||'OMACHALA PALACE ACADEMY').toUpperCase();
+  document.getElementById('slip-term-session').textContent=`${(student.term||'').toUpperCase()} RESULT — ${student.session}`;
+  document.getElementById('slip-principal').textContent=student.principal_name||'PRINCIPAL';
+  document.getElementById('slip-info-grid').innerHTML=[
+    ['Student Name',student.name.toUpperCase()],['Student ID',student.student_id],
+    ['Gender',(student.gender||'—').toUpperCase()],['Age',student.age||'—'],
+    ['Class',student.class_name],['No. in Class',classTotal+' Students'],
+    ['Term',student.term],['Session',student.session],
+  ].map(([k,v])=>`<div class="slip-info-item"><strong>${k}:</strong><span>${v}</span></div>`).join('');
+  document.getElementById('slip-subjects').innerHTML=(subjects||[]).map(s=>`
+    <tr>
+      <td>${s.subject}</td><td>${s.ca1}</td><td>${s.ca2}</td><td>${s.ca3}</td><td>${s.exam}</td>
+      <td><strong>${s.total}</strong></td><td><strong>${s.grade}</strong></td><td>${getGradeRemark(s.grade)}</td><td>${getOrdinal(s.position||1)}</td>
+    </tr>`).join('');
+  const avg=subjects.length?(student.grand_total/subjects.length).toFixed(1):'0.0';
+  document.getElementById('slip-summary').innerHTML=`
+    <div class="slip-stat"><div class="val">${student.grand_total}</div><div class="lbl">Grand Total</div></div>
+    <div class="slip-stat"><div class="val">${avg}%</div><div class="lbl">Average Score</div></div>
+    <div class="slip-stat"><div class="val">${getOrdinal(classPos)}</div><div class="lbl">Class Position</div></div>
+    <div class="slip-stat"><div class="val">${classTotal}</div><div class="lbl">Total in Class</div></div>`;
+  document.getElementById('slip-traits').innerHTML=[
+    ['Neatness',student.neatness],['Obedience',student.obedience],['Punctuality',student.punctuality],
+    ['Attentiveness',student.attentiveness],['Initiative',student.initiative],['Self Control',student.self_control]
+  ].map(([k,v])=>`<div class="slip-trait-row"><span>${k}</span><span>${mapTraitGrade(v)}</span></div>`).join('');
+  document.getElementById('slip-remark').textContent=student.teacher_remark||getAutoRemark(parseFloat(avg));
+  document.getElementById('slip-next-term').innerHTML=`
+    <div><strong>Next Term Begins</strong>${fmt(student.next_term_begins)}</div>
+    <div><strong>Next Term Ends</strong>${fmt(student.next_term_ends)}</div>`;
+  autoFitSlip();
+}
+
+// ════════════════════════════════════════════
+// AUTO-FIT: Scale slip to one A4 page height
+// ════════════════════════════════════════════
+function autoFitSlip(){
+  const slip=document.getElementById('the-slip');
+  if(!slip)return;
+  slip.style.transform='';
+  slip.parentElement.style.height='';
+  requestAnimationFrame(()=>{
+    const A4_HEIGHT_PX=1122; // 297mm at 96dpi
+    const slipH=slip.scrollHeight;
+    if(slipH>A4_HEIGHT_PX){
+      const scale=A4_HEIGHT_PX/slipH;
+      slip.style.transformOrigin='top left';
+      slip.style.transform=`scale(${scale})`;
+      slip.parentElement.style.height=(slipH*scale)+'px';
+    }
+  });
+}
+
+function downloadPDF(){
+  const{student:s,classPos:curClassPos,classTotal:curClassTotal,subjects}=appState;
+  if(!s)return;
+  buildPDF(s,curClassPos,curClassTotal,subjects,1.0);
+}
+
+function buildPDF(s,curClassPos,curClassTotal,subjects,scaleFactor){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const avg=subjects.length?(s.grand_total/subjects.length).toFixed(1):'0.0';
+  const subjectCount=subjects.length;
+  // Scale font sizes down if many subjects OR by scaleFactor
+  const tblFont=Math.max(5,Math.round((subjectCount>10?7:8)*scaleFactor));
+  const tblRowH=Math.max(3.5,Math.round((subjectCount>10?5:6)*scaleFactor));
+
+  // ── HEADER ──
+  doc.setFillColor(26,31,94);doc.rect(0,0,210,32,'F');
+  const logoImg=document.getElementById('slip-logo');
+  if(logoImg&&logoImg.complete&&logoImg.naturalWidth>0){
+    try{const canvas=document.createElement('canvas');canvas.width=logoImg.naturalWidth;canvas.height=logoImg.naturalHeight;canvas.getContext('2d').drawImage(logoImg,0,0);doc.addImage(canvas.toDataURL('image/png'),'PNG',8,4,22,22);}catch(e){}
+  }
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(15);
+  doc.text((s.school_name||'OMACHALA PALACE ACADEMY').toUpperCase(),105,13,{align:'center'});
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('STUDENT ACADEMIC REPORT',105,21,{align:'center'});
+  doc.setFillColor(192,57,43);doc.rect(0,32,210,9,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text(`${(s.term||'').toUpperCase()} RESULT — ${s.session}`,105,38,{align:'center'});
+
+  // ── BIO DATA ──
+  const bioRowH=5.5*scaleFactor;
+  let y=47;doc.setTextColor(26,26,46);doc.setFontSize(8*scaleFactor);
+  const iL=[['Student Name',s.name.toUpperCase()],['Student ID',s.student_id],['Class',s.class_name],['Term',s.term]];
+  const iR=[['Gender',(s.gender||'—').toUpperCase()],['Age',s.age||'—'],['Session',s.session],['No. in Class',curClassTotal+' Students']];
+  iL.forEach(([k,v],i)=>{doc.setFont('helvetica','bold');doc.text(k+':',14,y+i*bioRowH);doc.setFont('helvetica','normal');doc.text(String(v||''),52,y+i*bioRowH);});
+  iR.forEach(([k,v],i)=>{doc.setFont('helvetica','bold');doc.text(k+':',110,y+i*bioRowH);doc.setFont('helvetica','normal');doc.text(String(v||''),147,y+i*bioRowH);});
+  y+=22*scaleFactor+4;
+
+  // ── SUBJECTS TABLE ──
+  doc.autoTable({
+    startY:y,
+    head:[['Subject','CA1','CA2','CA3','Exam','Total','Grade','Remark','Position']],
+    body:subjects.map(sub=>[sub.subject,sub.ca1,sub.ca2,sub.ca3,sub.exam,sub.total,sub.grade,getGradeRemark(sub.grade),getOrdinal(sub.position||1)]),
+    headStyles:{fillColor:[26,31,94],fontSize:tblFont,halign:'center'},
+    bodyStyles:{fontSize:tblFont,halign:'center',minCellHeight:tblRowH,cellPadding:1.5*scaleFactor},
+    columnStyles:{0:{halign:'left',fontStyle:'bold'},7:{halign:'left'}},
+    alternateRowStyles:{fillColor:[238,241,255]},
+    margin:{left:14,right:14}
+  });
+  y=doc.lastAutoTable.finalY+4*scaleFactor;
+
+  // ── SUMMARY STATS ──
+  const stats=[['Grand Total',s.grand_total],['Average',avg+'%'],['Class Position',getOrdinal(curClassPos)],['Class Size',curClassTotal]];
+  const cW=45.5;
+  const sumH=14*scaleFactor;
+  stats.forEach(([lbl,val],i)=>{
+    const x=14+i*cW;
+    doc.setFillColor(238,241,255);doc.roundedRect(x,y,cW-2,sumH,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11*scaleFactor);doc.setTextColor(26,31,94);
+    doc.text(String(val),x+(cW-2)/2,y+sumH*0.5,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5*scaleFactor);doc.setTextColor(100,100,100);
+    doc.text(lbl,x+(cW-2)/2,y+sumH*0.85,{align:'center'});
+  });
+  y+=sumH+5*scaleFactor;
+
+  // ── PSYCHOMOTOR TRAITS (left col) + GRADING KEY (right col) ──
+  const traits=[['Neatness',s.neatness],['Obedience',s.obedience],['Punctuality',s.punctuality],['Attentiveness',s.attentiveness],['Initiative',s.initiative],['Self Control',s.self_control]];
+  const colW=88; // each column width
+  const colGap=6;
+  const leftX=14;
+  const rightX=leftX+colW+colGap;
+  const rowH=5.5*scaleFactor;
+  const traitsBodyH=traits.length*rowH;
+  const gkRows=[['A','75 & Above','Distinction'],['B','65–74','Very Good'],['C','55–64','Good'],['D','40–54','Fair'],['E','0–39','Poor']];
+  const gkRowH=traitsBodyH/gkRows.length; // make grading key rows fill same height as traits
+
+  // Left: Psychomotor header
+  doc.setFillColor(26,31,94);doc.rect(leftX,y,colW,6*scaleFactor,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7.5*scaleFactor);
+  doc.text('PSYCHOMOTOR & BEHAVIOURAL TRAITS',leftX+colW/2,y+4*scaleFactor,{align:'center'});
+  traits.forEach(([k,v],i)=>{
+    const ty=y+6*scaleFactor+i*rowH;
+    if(i%2===0){doc.setFillColor(249,250,251);doc.rect(leftX,ty,colW,rowH,'F');}
+    doc.setTextColor(13,17,23);doc.setFont('helvetica','normal');doc.setFontSize(7.5*scaleFactor);
+    doc.text(k,leftX+2,ty+3.8*scaleFactor);doc.setFont('helvetica','bold');doc.text(mapTraitGrade(v),leftX+colW-2,ty+3.8*scaleFactor,{align:'right'});
+  });
+
+  // Right: Grading Key header
+  doc.setFillColor(26,31,94);doc.rect(rightX,y,colW,6*scaleFactor,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7.5*scaleFactor);
+  doc.text('GRADING KEY',rightX+colW/2,y+4*scaleFactor,{align:'center'});
+  gkRows.forEach(([grade,range,remark],i)=>{
+    const gy=y+6*scaleFactor+i*gkRowH;
+    doc.setFillColor(i%2===0?238:245,i%2===0?241:247,i%2===0?255:255);
+    doc.rect(rightX,gy,colW,gkRowH,'F');
+    doc.setDrawColor(199,204,240);doc.rect(rightX,gy,colW,gkRowH,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8*scaleFactor);doc.setTextColor(26,31,94);
+    doc.text(grade,rightX+10,gy+gkRowH/2+1.5*scaleFactor,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(7*scaleFactor);doc.setTextColor(50,50,50);
+    doc.text(range,rightX+colW/2,gy+gkRowH/2+1.5*scaleFactor,{align:'center'});
+    doc.setFont('helvetica','italic');doc.setFontSize(6.5*scaleFactor);doc.setTextColor(80,80,80);
+    doc.text(remark,rightX+colW-4,gy+gkRowH/2+1.5*scaleFactor,{align:'right'});
+  });
+
+  y+=6*scaleFactor+traitsBodyH+4*scaleFactor;
+
+  // ── TEACHER REMARK ──
+  const remarkLines=doc.splitTextToSize(s.teacher_remark||getAutoRemark(parseFloat(avg)),178);
+  const remarkH=(7+remarkLines.length*4.5)*scaleFactor;
+  doc.setFillColor(255,240,240);doc.roundedRect(14,y,182,remarkH,2,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7*scaleFactor);doc.setTextColor(153,27,27);doc.text("TEACHER'S REMARK",16,y+4.5*scaleFactor);
+  doc.setFont('helvetica','normal');doc.setTextColor(26,26,46);doc.setFontSize(7.5*scaleFactor);
+  doc.text(remarkLines,16,y+9*scaleFactor);
+  y+=remarkH+4*scaleFactor;
+
+  // ── NEXT TERM DATES ──
+  if(s.next_term_begins||s.next_term_ends){
+    const dtH=11*scaleFactor;
+    doc.setFillColor(238,241,255);
+    doc.roundedRect(14,y,88,dtH,2,2,'F');doc.roundedRect(108,y,88,dtH,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7*scaleFactor);doc.setTextColor(26,31,94);
+    doc.text('NEXT TERM BEGINS',58,y+4.5*scaleFactor,{align:'center'});doc.text('NEXT TERM ENDS',152,y+4.5*scaleFactor,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(8*scaleFactor);doc.setTextColor(26,26,46);
+    doc.text(fmt(s.next_term_begins),58,y+9*scaleFactor,{align:'center'});doc.text(fmt(s.next_term_ends),152,y+9*scaleFactor,{align:'center'});
+    y+=dtH+4*scaleFactor;
+  }
+
+  // ── SIGNATURES ──
+  const sigGap=14*scaleFactor;
+  doc.setDrawColor(130,130,130);
+  doc.line(14,y+sigGap,65,y+sigGap);doc.line(80,y+sigGap,131,y+sigGap);doc.line(145,y+sigGap,196,y+sigGap);
+  doc.setFont('helvetica','normal');doc.setFontSize(8*scaleFactor);doc.setTextColor(80,80,80);
+  doc.text('Class Teacher',39.5,y+sigGap+4*scaleFactor,{align:'center'});
+  doc.text(s.principal_name||'Principal',105.5,y+sigGap+4*scaleFactor,{align:'center'});
+  doc.text('Date',170.5,y+sigGap+4*scaleFactor,{align:'center'});
+
+  // ── FOOTER & AUTO-FIT CHECK ──
+  const sigBottom=y+22;
+  const A4_USABLE=279; // 297mm - 18mm margins/footer room
+  // If content overflows a single A4 page and we haven't scaled too small yet, retry
+  if(sigBottom>A4_USABLE&&scaleFactor>0.6&&doc.internal.getNumberOfPages()===1){
+    buildPDF(s,curClassPos,curClassTotal,subjects,scaleFactor*0.92);
+    return;
+  }
+  const totalPages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setFillColor(240,242,248);doc.rect(0,282,210,15,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,31,94);
+    doc.text('Omachala Palace Academy',105,291,{align:'center'});
+  }
+  doc.save(`Result_${s.name.replace(/\s+/g,'_')}_${s.term}_${s.session}.pdf`);
+}
+
+let allStudents=[];
+
+async function loadStudentList(){
+  const tbody=document.getElementById('students-tbody');
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Loading...</td></tr>';
+  const{data,error}=await db.from('students').select('*').order('created_at',{ascending:false});
+  if(error){tbody.innerHTML='<tr><td colspan="7">Could not load records.</td></tr>';return;}
+  allStudents=data||[];
+  renderStudentTable(allStudents);
+}
+
+function renderStudentTable(students){
+  const tbody=document.getElementById('students-tbody');
+  if(!students.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No students found</td></tr>';return;}
+  tbody.innerHTML=students.map(s=>`
+    <tr>
+      <td><strong>${s.name}</strong></td><td>${s.student_id}</td><td>${s.class_name}</td>
+      <td>${s.term}</td><td>${s.session}</td><td><strong>${s.grand_total}</strong></td>
+      <td><div class="flex gap-8" style="flex-wrap:wrap;">
+        <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;" onclick="viewStudentSlip('${s.id}')">👁 View</button>
+        <button class="btn btn-gold" style="padding:5px 12px;font-size:12px;" onclick="openEditModal('${s.id}')">✏️ Edit</button>
+        <button class="btn btn-danger" style="padding:5px 12px;font-size:12px;" onclick="deleteStudent('${s.id}','${s.name}')">🗑 Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function filterStudents(){
+  const cls=document.getElementById('filter-class').value.toLowerCase();
+  const term=document.getElementById('filter-term').value.toLowerCase();
+  renderStudentTable(allStudents.filter(s=>s.class_name.toLowerCase().includes(cls)&&s.term.toLowerCase().includes(term)));
+}
+
+async function viewStudentSlip(id){
+  const student=allStudents.find(s=>s.id===id);if(!student)return;
+  const{data:peers}=await db.from('students').select('student_id,grand_total,subjects').ilike('school_name',student.school_name||'').ilike('class_name',student.class_name||'').ilike('term',student.term||'').ilike('session',student.session||'');
+  const peerList=peers||[];
+  const allTotals=peerList.map(p=>p.grand_total||0);
+  const classPos=denseRank(student.grand_total||0,allTotals);
+  const classTotal=peerList.length||1;
+  const subjectsWithPos=(student.subjects||[]).map(s=>{
+    const myScore=s.total||0;
+    const allSubjectScores=peerList.map(p=>{const found=(p.subjects||[]).find(x=>clean(x.subject)===clean(s.subject));return found?(found.total||0):0;});
+    return{...s,position:denseRank(myScore,allSubjectScores)};
+  });
+  renderResultSlip(student,classPos,classTotal,subjectsWithPos);
+  showPage('result-slip-page');
+}
+
+async function deleteStudent(id,name){
+  if(!confirm(`Delete result for ${name}? This cannot be undone.`))return;
+  const{error}=await db.from('students').delete().eq('id',id);
+  if(error){setStatus('manage-status','❌ Could not delete.','error');return;}
+  setStatus('manage-status',`✅ ${name}'s result deleted`,'success');
+  loadStudentList();
+}
+
+function openSendEmailModal(){document.getElementById('email-modal').classList.add('open');}
+
+async function sendResultsToParents(){
+  const term=document.getElementById('em-term').value;
+  const session=document.getElementById('em-session').value.trim();
+  setStatus('email-status','⏳ Loading student records...','info');
+  let q=db.from('students').select('*').not('email','is',null).neq('email','');
+  if(term)q=q.eq('term',term);if(session)q=q.eq('session',session);
+  const{data:students,error}=await q;
+  if(error){setStatus('email-status','❌ Could not load records.','error');return;}
+  if(!students.length){setStatus('email-status','⚠️ No students with email addresses found.','info');return;}
+  setStatus('email-status',`⏳ Sending ${students.length} emails...`,'info');
+  let sent=0,failed=0;
+  for(const student of students){
+    const avg=student.subjects&&student.subjects.length?(student.grand_total/student.subjects.length).toFixed(1):'0.0';
+    try{
+      const res=await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:FROM_EMAIL,to:student.email,subject:`${student.term} Result — ${student.name} | ${student.school_name}`,html:buildEmailHTML(student,avg)})});
+      if(res.ok)sent++;else failed++;
+    }catch{failed++;}
+  }
+  setStatus('email-status',`✅ Done! ${sent} sent.${failed>0?' '+failed+' failed.':''}`,'success');
+}
+
+function buildEmailHTML(s,avg){
+  return`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;border-radius:10px;overflow:hidden;">
+    <div style="background:#1b4332;color:white;padding:24px;text-align:center;">
+      <h2 style="margin:0;font-size:20px;">${(s.school_name||'OMACHALA PALACE ACADEMY').toUpperCase()}</h2>
+      <p style="margin:6px 0 0;opacity:0.8;font-size:13px;">${s.term} Academic Result — ${s.session}</p>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:15px;">Dear Parent/Guardian of <strong>${s.name}</strong>,</p>
+      <p style="color:#555;font-size:14px;margin-top:8px;">Please find below a summary of your child's academic performance for <strong>${s.term}</strong>, <strong>${s.session}</strong>.</p>
+      <div style="background:#f0f7f4;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #c3e0d0;"><td style="padding:6px 0;"><strong>Class:</strong></td><td>${s.class_name}</td><td><strong>Grand Total:</strong></td><td><strong>${s.grand_total}</strong></td></tr>
+          <tr style="border-bottom:1px solid #c3e0d0;"><td style="padding:6px 0;"><strong>Average:</strong></td><td>${avg}%</td><td><strong>Subjects:</strong></td><td>${(s.subjects||[]).length}</td></tr>
+          <tr><td style="padding:6px 0;" colspan="4"><strong>Remark:</strong> ${s.teacher_remark||''}</td></tr>
+        </table>
+      </div>
+      ${s.next_term_begins?`<div style="background:#fffbeb;padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px;">📅 <strong>Next Term Begins:</strong> ${fmt(s.next_term_begins)} &nbsp;&nbsp; <strong>Ends:</strong> ${fmt(s.next_term_ends)}</div>`:''}
+      <div style="background:#1b4332;color:white;border-radius:10px;padding:20px;text-align:center;margin-top:20px;">
+        <strong>Omachala Palace Academy</strong>
+      </div>
+      <p style="font-size:10px;color:#aaa;text-align:center;margin-top:16px;">Omachala Palace Academy — <strong style="color:#c9a84c;">Excellence in Education</strong></p>
+    </div>
+  </div>`;
+}
+
+let chartInstances={};
+function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+
+async function loadAnalytics(){
+  document.getElementById('analytics-loading').classList.remove('hidden');
+  document.getElementById('analytics-content').classList.add('hidden');
+  const term=document.getElementById('analytics-term').value;
+  const session=document.getElementById('analytics-session').value.trim();
+  let q=db.from('students').select('*');
+  if(term)q=q.eq('term',term);if(session)q=q.eq('session',session);
+  const{data:students,error}=await q;
+  if(error||!students||!students.length){document.getElementById('analytics-loading').textContent='No data found.';return;}
+  document.getElementById('analytics-loading').classList.add('hidden');
+  document.getElementById('analytics-content').classList.remove('hidden');
+  const total=students.length;
+  const schoolAvg=(students.reduce((a,s)=>a+(s.average||0),0)/total).toFixed(1);
+  const passed=students.filter(s=>(s.average||0)>=PASS_MARK).length;
+  const passRate=((passed/total)*100).toFixed(0);
+  const classes=[...new Set(students.map(s=>s.class_name))];
+  document.getElementById('a-stats').innerHTML=`
+    <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Students</div></div>
+    <div class="stat-card"><div class="num">${schoolAvg}%</div><div class="lbl">School Average</div></div>
+    <div class="stat-card"><div class="num">${passed}</div><div class="lbl">Passed (≥${PASS_MARK}%)</div></div>
+    <div class="stat-card"><div class="num">${total-passed}</div><div class="lbl">Below Average</div></div>
+    <div class="stat-card"><div class="num">${passRate}%</div><div class="lbl">Pass Rate</div></div>
+    <div class="stat-card"><div class="num">${classes.length}</div><div class="lbl">Classes</div></div>`;
+  const males=students.filter(s=>clean(s.gender)==='male');
+  const females=students.filter(s=>clean(s.gender)==='female');
+  const mAvg=males.length?(males.reduce((a,s)=>a+(s.average||0),0)/males.length).toFixed(1):0;
+  const fAvg=females.length?(females.reduce((a,s)=>a+(s.average||0),0)/females.length).toFixed(1):0;
+  destroyChart('chart-gender');
+  chartInstances['chart-gender']=new Chart(document.getElementById('chart-gender'),{type:'bar',data:{labels:[`Male (${males.length})`,`Female (${females.length})`],datasets:[{label:'Average Score (%)',data:[mAvg,fAvg],backgroundColor:['rgba(27,67,50,0.8)','rgba(201,168,76,0.8)'],borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
+  const clsData=classes.map(cls=>{const g=students.filter(s=>s.class_name===cls);return{cls,avg:(g.reduce((a,s)=>a+(s.average||0),0)/g.length).toFixed(1),count:g.length};}).sort((a,b)=>b.avg-a.avg);
+  destroyChart('chart-class');
+  chartInstances['chart-class']=new Chart(document.getElementById('chart-class'),{type:'bar',data:{labels:clsData.map(x=>x.cls+' ('+x.count+')'),datasets:[{label:'Average (%)',data:clsData.map(x=>x.avg),backgroundColor:'rgba(27,67,50,0.75)',borderRadius:6}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
+  const gc={'A':0,'B':0,'C':0,'D':0,'E':0};
+  students.forEach(s=>(s.subjects||[]).forEach(sub=>{
+    const g=getGrade(sub.total);
+    if(gc[g]!==undefined)gc[g]++;
+  }));
+  destroyChart('chart-grades');
+  chartInstances['chart-grades']=new Chart(document.getElementById('chart-grades'),{type:'doughnut',data:{labels:['A — Distinction','B — Very Good','C — Good','D — Fair','E — Poor'],datasets:[{data:Object.values(gc),backgroundColor:['#1b4332','#2d6a4f','#c9a84c','#e9c46a','#dc2626']}]},options:{plugins:{legend:{position:'right'}}}});
+  const subMap={};
+  students.forEach(s=>(s.subjects||[]).forEach(sub=>{if(!subMap[sub.subject])subMap[sub.subject]=[];subMap[sub.subject].push(sub.total);}));
+  const subNames=Object.keys(subMap);
+  const subAvgs=subNames.map(n=>(subMap[n].reduce((a,b)=>a+b,0)/subMap[n].length).toFixed(1));
+  destroyChart('chart-subjects');
+  chartInstances['chart-subjects']=new Chart(document.getElementById('chart-subjects'),{type:'bar',data:{labels:subNames,datasets:[{label:'Avg Score',data:subAvgs,backgroundColor:'rgba(201,168,76,0.8)',borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
+  document.getElementById('a-top-students').innerHTML=classes.map(cls=>{
+    const grp=students.filter(s=>s.class_name===cls).sort((a,b)=>b.grand_total-a.grand_total).slice(0,3);
+    const allInClass=students.filter(s=>s.class_name===cls).map(s=>s.grand_total||0);
+    return`<div class="top-card"><h4>📚 ${cls}</h4>${grp.map(s=>{const rank=denseRank(s.grand_total||0,allInClass);return`<div class="top-student"><div class="rank-badge ${rank<=3?'rank-'+rank:''}">${rank}</div><div><div style="font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--muted)">${s.student_id} | Total: ${s.grand_total} | Avg: ${s.average}%</div></div></div>`;}).join('')}</div>`;
+  }).join('');
+  const atRisk=students.filter(s=>(s.subjects||[]).filter(sub=>sub.total<AT_RISK_SCORE).length>=AT_RISK_MIN_SUBJECTS);
+  document.getElementById('a-at-risk').innerHTML=atRisk.length
+    ?atRisk.map(s=>{const fc=(s.subjects||[]).filter(sub=>sub.total<AT_RISK_SCORE).length;return`<li class="at-risk-item"><div><div class="name">${s.name}</div><div class="meta">${s.student_id} | ${s.class_name} | Avg: ${s.average}%</div></div><span class="fail-badge">${fc} Failed</span></li>`;}).join('')
+    :'<li class="alert alert-success">✅ No at-risk students found.</li>';
+}
+
+function openDeployModal(){document.getElementById('deploy-modal').classList.add('open');}
+
+async function deployAnnualResult(){
+  const session=document.getElementById('deploy-session').value.trim();
+  if(!session){setStatus('deploy-status','❌ Please enter the session','error');return;}
+  const btn=document.getElementById('deploy-btn');
+  btn.disabled=true;
+  document.getElementById('deploy-progress-bar').style.width='0%';
+  document.getElementById('deploy-progress-wrap').classList.remove('hidden');
+  setStatus('deploy-status','⏳ Fetching student records...','info');
+  const{data:allRecords,error:fetchErr}=await db.from('students').select('student_id,name,class_name,session,term,average').ilike('session',session);
+  if(fetchErr){setStatus('deploy-status',`❌ Could not fetch records.<br/><small>${fetchErr.message}</small>`,'error');btn.disabled=false;return;}
+  if(!allRecords||!allRecords.length){setStatus('deploy-status','❌ No student records found for this session.','error');btn.disabled=false;return;}
+  const studentMap={};
+  allRecords.forEach(r=>{
+    const key=(r.student_id||'').toLowerCase();
+    if(!studentMap[key])studentMap[key]={student_id:r.student_id,name:r.name,class_name:r.class_name,session:r.session,terms:{}};
+    const termKey=(r.term||'').toLowerCase();
+    if(termKey.includes('first'))studentMap[key].terms.first=parseFloat(r.average)||0;
+    if(termKey.includes('second'))studentMap[key].terms.second=parseFloat(r.average)||0;
+    if(termKey.includes('third'))studentMap[key].terms.third=parseFloat(r.average)||0;
+  });
+  const allStudentsList=Object.values(studentMap);
+  const complete=allStudentsList.filter(s=>s.terms.first!==undefined&&s.terms.second!==undefined&&s.terms.third!==undefined);
+  const incomplete=allStudentsList.filter(s=>s.terms.first===undefined||s.terms.second===undefined||s.terms.third===undefined);
+  if(complete.length===0){
+    const missing=incomplete.map(s=>{const lacking=[];if(s.terms.first===undefined)lacking.push('1st');if(s.terms.second===undefined)lacking.push('2nd');if(s.terms.third===undefined)lacking.push('3rd');return`${s.name} (${s.student_id}) — missing: ${lacking.join(', ')}`;});
+    setStatus('deploy-status',`❌ No student has all 3 terms for <strong>${session}</strong>.<br/><small>${missing.slice(0,10).join('<br/>')}${missing.length>10?`<br/>...and ${missing.length-10} more.`:''}</small>`,'error');
+    btn.disabled=false;return;
+  }
+  let warningHTML='';
+  if(incomplete.length>0)warningHTML=`<div class="alert alert-warning" style="margin-top:8px;font-size:12px;">⚠️ <strong>${incomplete.length} student(s) skipped</strong> — missing terms.</div>`;
+  let done=0,saved=0,failed=0;
+  setStatus('deploy-status',`⏳ Processing ${complete.length} student(s)...`,'info');
+  for(const s of complete){
+    const first=s.terms.first,second=s.terms.second,third=s.terms.third;
+    const annual_average=parseFloat(((first+second+third)/3).toFixed(2));
+    const grade=getGrade(annual_average);
+    const promotion_status=annual_average>=PASS_MARK?'Promoted':'Not Promoted';
+    const payload={student_id:s.student_id,full_name:s.name,class:s.class_name,session:s.session,first_term:first,second_term:second,third_term:third,annual_average,grade,status:'published',promotion_status};
+    const{error:uErr}=await db.from('annual_results').upsert(payload,{onConflict:'student_id,session',ignoreDuplicates:false});
+    if(uErr){
+      console.error(uErr);
+      if(uErr.message&&(uErr.message.includes('does not exist')||uErr.code==='42P01')){setStatus('deploy-status','❌ <strong>annual_results table does not exist.</strong> Please contact your system administrator to set up the database.','error');btn.disabled=false;return;}
+      failed++;
+    }else{saved++;}
+    done++;
+    document.getElementById('deploy-progress-bar').style.width=Math.round((done/complete.length)*100)+'%';
+    document.getElementById('deploy-progress-label').textContent=`Processing ${done} of ${complete.length}...`;
+  }
+  btn.disabled=false;
+  if(failed===0){document.getElementById('deploy-status').innerHTML=`<div class="alert alert-success">✅ ${saved} student(s) deployed for <strong>${session}</strong>.</div>${warningHTML}`;}
+  else{document.getElementById('deploy-status').innerHTML=`<div class="alert alert-warning">⚠️ ${saved} saved, ${failed} failed.</div>${warningHTML}`;}
+}
+
+async function fetchAnnualResult(){
+  const idRaw=document.getElementById('as-id').value.trim();
+  const session=document.getElementById('as-session').value.trim();
+  if(!idRaw||!session){setStatus('as-status','❌ Please fill in both fields','error');return;}
+  setStatus('as-status','⏳ Searching...','info');
+  const{data,error}=await db.from('annual_results').select('*').ilike('student_id',idRaw).ilike('session',session).eq('status','published').maybeSingle();
+  if(error){
+    if(error.message&&(error.message.includes('does not exist')||error.code==='42P01')){setStatus('as-status','❌ Annual results not set up yet. Contact the school.','error');}
+    else{setStatus('as-status','❌ A database error occurred.','error');console.error(error);}
+    return;
+  }
+  if(!data){setStatus('as-status',`<strong>Annual result not yet released</strong><br/><small>No result found for ID <strong>${idRaw}</strong>, session <strong>${session}</strong>.</small>`,'error');return;}
+  setStatus('as-status','','info');
+  renderAnnualSlip(data);
+  showPage('annual-slip-page');
+}
+
+let annualAppState=null;
+
+function renderAnnualSlip(d){
+  annualAppState=d;
+  document.getElementById('annual-slip-logo').src=SCHOOL_LOGO_URL;
+  document.getElementById('annual-slip-school').textContent='OMACHALA PALACE ACADEMY';
+  document.getElementById('annual-slip-session-label').textContent=`ANNUAL RESULT — ${d.session}`;
+  document.getElementById('annual-slip-principal').textContent='PRINCIPAL';
+  document.getElementById('annual-slip-info-grid').innerHTML=[
+    ['Student Name',(d.full_name||'').toUpperCase()],
+    ['Student ID',d.student_id],
+    ['Class',d.class],
+    ['Session',d.session],
+    ['Status',d.promotion_status||d.status],
+  ].map(([k,v])=>`<div class="slip-info-item"><strong>${k}:</strong><span>${v}</span></div>`).join('');
+  document.getElementById('annual-term-scores').innerHTML=`
+    <div class="annual-term-box"><div class="term-label">1st Term</div><div class="term-val">${parseFloat(d.first_term||0).toFixed(1)}</div><div style="font-size:11px;color:var(--muted);">Average</div></div>
+    <div class="annual-term-box"><div class="term-label">2nd Term</div><div class="term-val">${parseFloat(d.second_term||0).toFixed(1)}</div><div style="font-size:11px;color:var(--muted);">Average</div></div>
+    <div class="annual-term-box"><div class="term-label">3rd Term</div><div class="term-val">${parseFloat(d.third_term||0).toFixed(1)}</div><div style="font-size:11px;color:var(--muted);">Average</div></div>`;
+  const isPass=(d.annual_average||0)>=PASS_MARK;
+  document.getElementById('annual-final-box').innerHTML=`
+    <div class="fa-label">Annual Average</div>
+    <div class="fa-val">${parseFloat(d.annual_average||0).toFixed(1)}%</div>
+    <div class="fa-grade">Grade: ${d.grade}</div>
+    <div class="annual-status-badge ${isPass?'annual-status-pass':'annual-status-fail'}">
+      ${isPass?'✅ '+(d.promotion_status||'Promoted'):'❌ '+(d.promotion_status||'Not Promoted')}
+    </div>`;
+}
+
+function downloadAnnualPDF(){
+  const d=annualAppState;if(!d)return;
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  doc.setFillColor(26,26,46);doc.rect(0,0,210,32,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(15);
+  doc.text('OMACHALA PALACE ACADEMY',105,13,{align:'center'});
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('ANNUAL ACADEMIC REPORT',105,21,{align:'center'});
+  doc.setFillColor(201,168,76);doc.rect(0,32,210,9,'F');
+  doc.setTextColor(26,26,46);doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text(`ANNUAL RESULT — ${d.session}`,105,38,{align:'center'});
+  let y=48;doc.setFontSize(8);doc.setTextColor(26,26,46);
+  const iL=[['Student Name',(d.full_name||'').toUpperCase()],['Student ID',d.student_id]];
+  const iR=[['Class',d.class],['Session',d.session]];
+  iL.forEach(([k,v],i)=>{doc.setFont('helvetica','bold');doc.text(k+':',14,y+i*6);doc.setFont('helvetica','normal');doc.text(String(v||''),52,y+i*6);});
+  iR.forEach(([k,v],i)=>{doc.setFont('helvetica','bold');doc.text(k+':',110,y+i*6);doc.setFont('helvetica','normal');doc.text(String(v||''),147,y+i*6);});
+  y+=18;
+  doc.autoTable({startY:y,head:[['Term','Average Score','Grade']],
+    body:[['First Term',parseFloat(d.first_term||0).toFixed(1)+'%',getGrade(parseFloat(d.first_term||0))],['Second Term',parseFloat(d.second_term||0).toFixed(1)+'%',getGrade(parseFloat(d.second_term||0))],['Third Term',parseFloat(d.third_term||0).toFixed(1)+'%',getGrade(parseFloat(d.third_term||0))]],
+    headStyles:{fillColor:[26,26,46],fontSize:9,halign:'center'},bodyStyles:{fontSize:9,halign:'center'},columnStyles:{0:{halign:'left',fontStyle:'bold'}},alternateRowStyles:{fillColor:[240,240,248]},margin:{left:14,right:14}});
+  y=doc.lastAutoTable.finalY+10;
+  doc.setFillColor(201,168,76);doc.roundedRect(14,y,182,24,3,3,'F');
+  doc.setTextColor(26,26,46);doc.setFont('helvetica','bold');doc.setFontSize(10);
+  doc.text('ANNUAL AVERAGE',105,y+8,{align:'center'});
+  doc.setFontSize(18);doc.text(`${parseFloat(d.annual_average||0).toFixed(1)}%  |  Grade: ${d.grade}`,105,y+18,{align:'center'});
+  y+=30;
+  const isPass=(d.annual_average||0)>=PASS_MARK;
+  doc.setFillColor(isPass?220:254,isPass?252:226,isPass?231:226);
+  doc.roundedRect(14,y,182,12,3,3,'F');
+  doc.setTextColor(isPass?22:220,isPass?163:38,isPass?74:38);
+  doc.setFont('helvetica','bold');doc.setFontSize(10);
+  doc.text((isPass?'✓ PROMOTED — ':'✗ NOT PROMOTED — ')+(d.promotion_status||d.status).toUpperCase(),105,y+8,{align:'center'});
+  y+=22;
+  // GRADING KEY
+  doc.setFillColor(27,67,50);doc.roundedRect(14,y,182,7,2,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);
+  doc.text('GRADING KEY',105,y+4.5,{align:'center'});
+  y+=8;
+  const gkData2=[['A','75 & Above','Distinction'],['B','65 - 74','Very Good'],['C','55 - 64','Good'],['D','40 - 54','Fair'],['E','0 - 39','Poor']];
+  const gkW2=182/5;
+  const gkH2=16;
+  gkData2.forEach(([grade,range,remark],i)=>{
+    const gx=14+(i*gkW2);
+    doc.setFillColor(i%2===0?240:248,i%2===0?247:249,i%2===0?244:245);
+    doc.rect(gx,y,gkW2,gkH2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(27,67,50);
+    doc.text(grade,gx+gkW2/2,y+5.5,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(50,50,50);
+    doc.text(range,gx+gkW2/2,y+10,{align:'center'});
+    doc.setFont('helvetica','italic');doc.setFontSize(6);doc.setTextColor(80,80,80);
+    doc.text(remark,gx+gkW2/2,y+14,{align:'center'});
+  });
+  y+=gkH2+6;
+  doc.setDrawColor(150,150,150);doc.setTextColor(80,80,80);doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.line(14,y+16,65,y+16);doc.line(80,y+16,131,y+16);doc.line(145,y+16,196,y+16);
+  doc.text('Class Teacher',39.5,y+20,{align:'center'});
+  doc.text('Principal',105.5,y+20,{align:'center'});
+  doc.text('Date',170.5,y+20,{align:'center'});
+  // Footer — school name only
+  doc.setFillColor(245,245,245);doc.rect(0,282,210,15,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(27,67,50);
+  doc.text('Omachala Palace Academy',105,291,{align:'center'});
+  doc.save(`Annual_Result_${(d.full_name||'student').replace(/\s+/g,'_')}_${d.session}.pdf`);
+}
+
+// ════════════════════════════════════════════
+// EDIT STUDENT MODAL FUNCTIONS
+// ════════════════════════════════════════════
+function openEditModal(id){
+  const s=allStudents.find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('edit-db-id').value=s.id;
+  document.getElementById('edit-name').value=s.name||'';
+  document.getElementById('edit-id').value=s.student_id||'';
+  document.getElementById('edit-gender').value=s.gender||'';
+  document.getElementById('edit-age').value=s.age||'';
+  document.getElementById('edit-class').value=s.class_name||'';
+  document.getElementById('edit-term').value=s.term||'';
+  document.getElementById('edit-session').value=s.session||'';
+  document.getElementById('edit-school').value=s.school_name||'';
+  document.getElementById('edit-email').value=s.email||'';
+  document.getElementById('edit-phone').value=s.phone||'';
+  document.getElementById('edit-principal').value=s.principal_name||'';
+  document.getElementById('edit-remark').value=s.teacher_remark||'';
+  // Dates
+  document.getElementById('edit-next-begin').value=s.next_term_begins?s.next_term_begins.split('T')[0]:'';
+  document.getElementById('edit-next-end').value=s.next_term_ends?s.next_term_ends.split('T')[0]:'';
+  // Traits
+  ['neatness','obedience','punctuality','attentiveness','initiative','selfcontrol'].forEach(t=>{
+    const key=t==='selfcontrol'?'self_control':t;
+    const el=document.getElementById('edit-'+t);
+    if(el&&s[key])el.value=String(s[key]);
+  });
+  // Subjects
+  const c=document.getElementById('edit-subjects-container');
+  c.innerHTML='';
+  (s.subjects||[]).forEach(sub=>addEditSubjectRow(sub));
+  if(!(s.subjects&&s.subjects.length))addEditSubjectRow();
+  setStatus('edit-status','','info');
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal(){
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+function addEditSubjectRow(data){
+  const c=document.getElementById('edit-subjects-container');
+  const d=document.createElement('div');
+  d.className='subject-row';
+  d.innerHTML=`
+    <div class="field"><input class="subj-name" placeholder="Subject name" value="${data&&data.subject?data.subject:''}"/></div>
+    <div class="field"><input class="subj-ca1" type="number" min="0" max="100" placeholder="0" value="${data&&data.ca1!=null?data.ca1:''}" oninput="calcEditTotal(this)"/></div>
+    <div class="field"><input class="subj-ca2" type="number" min="0" max="100" placeholder="0" value="${data&&data.ca2!=null?data.ca2:''}" oninput="calcEditTotal(this)"/></div>
+    <div class="field"><input class="subj-ca3" type="number" min="0" max="100" placeholder="0" value="${data&&data.ca3!=null?data.ca3:''}" oninput="calcEditTotal(this)"/></div>
+    <div class="field"><input class="subj-exam" type="number" min="0" max="100" placeholder="0" value="${data&&data.exam!=null?data.exam:''}" oninput="calcEditTotal(this)"/></div>
+    <div class="field"><input class="subj-total" readonly style="background:#f0f7f4;font-weight:700;color:var(--primary);" value="${data&&data.total!=null?data.total:'0'}"/></div>
+    <button class="remove-btn" onclick="this.closest('.subject-row').remove()">✕</button>`;
+  c.appendChild(d);
+}
+
+function calcEditTotal(inp){
+  const row=inp.closest('.subject-row');
+  const ca1=Number(row.querySelector('.subj-ca1').value)||0;
+  const ca2=Number(row.querySelector('.subj-ca2').value)||0;
+  const ca3=Number(row.querySelector('.subj-ca3').value)||0;
+  const exam=Number(row.querySelector('.subj-exam').value)||0;
+  row.querySelector('.subj-total').value=ca1+ca2+ca3+exam;
+}
+
+async function saveEditedStudent(){
+  const dbId=document.getElementById('edit-db-id').value;
+  const name=document.getElementById('edit-name').value.trim();
+  const studentId=document.getElementById('edit-id').value.trim();
+  const cls=document.getElementById('edit-class').value.trim();
+  const term=document.getElementById('edit-term').value;
+  const session=document.getElementById('edit-session').value.trim();
+  if(!name||!studentId||!cls||!term||!session){
+    setStatus('edit-status','❌ Name, ID, Class, Term and Session are required.','error');return;
+  }
+  const rows=document.getElementById('edit-subjects-container').querySelectorAll('.subject-row');
+  const subjects=[];
+  for(const r of rows){
+    const sn=r.querySelector('.subj-name').value.trim();
+    if(!sn){setStatus('edit-status','❌ All subject names must be filled.','error');return;}
+    const ca1=Number(r.querySelector('.subj-ca1').value)||0;
+    const ca2=Number(r.querySelector('.subj-ca2').value)||0;
+    const ca3=Number(r.querySelector('.subj-ca3').value)||0;
+    const exam=Number(r.querySelector('.subj-exam').value)||0;
+    for(const[lbl,val]of[['CA1',ca1],['CA2',ca2],['CA3',ca3],['Exam',exam]]){
+      if(val<0||val>100){setStatus('edit-status',`❌ ${lbl} for "${sn}" must be 0–100.`,'error');return;}
+    }
+    const total=ca1+ca2+ca3+exam;
+    subjects.push({subject:sn,ca1,ca2,ca3,exam,total,grade:getGrade(total)});
+  }
+  const grandTotal=subjects.reduce((a,s)=>a+s.total,0);
+  const average=subjects.length?parseFloat((grandTotal/subjects.length).toFixed(2)):0;
+  const payload={
+    name,student_id:studentId,
+    gender:document.getElementById('edit-gender').value,
+    age:document.getElementById('edit-age').value,
+    school_name:document.getElementById('edit-school').value.trim(),
+    class_name:cls,term,session,
+    email:document.getElementById('edit-email').value.trim(),
+    phone:document.getElementById('edit-phone').value.trim(),
+    neatness:document.getElementById('edit-neatness').value,
+    obedience:document.getElementById('edit-obedience').value,
+    punctuality:document.getElementById('edit-punctuality').value,
+    attentiveness:document.getElementById('edit-attentiveness').value,
+    initiative:document.getElementById('edit-initiative').value,
+    self_control:document.getElementById('edit-selfcontrol').value,
+    teacher_remark:document.getElementById('edit-remark').value.trim(),
+    principal_name:document.getElementById('edit-principal').value.trim(),
+    next_term_begins:document.getElementById('edit-next-begin').value||null,
+    next_term_ends:document.getElementById('edit-next-end').value||null,
+    subjects,grand_total:grandTotal,average
+  };
+  const btn=document.getElementById('edit-save-btn');
+  btn.disabled=true;btn.textContent='⏳ Saving...';
+  setStatus('edit-status','⏳ Saving changes...','info');
+  const{error}=await db.from('students').update(payload).eq('id',dbId);
+  btn.disabled=false;btn.textContent='💾 Save Changes';
+  if(error){console.error(error);setStatus('edit-status','❌ Could not save. Please try again.','error');return;}
+  setStatus('edit-status',`✅ Record for <strong>${name}</strong> updated successfully!`,'success');
+  setTimeout(()=>{closeEditModal();loadStudentList();setStatus('manage-status',`✅ ${name}'s record updated.`,'success');},900);
+}
+
+checkSession();
+</script>
+</body>
+</html>
