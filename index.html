@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolexGift Tech Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --cyan: #00f0ff;
+  --magenta: #ff00ff;
+  --green: #00ff99;
+  --gold: #d4af37;
+  --dark-green: #1b4332;
+  --navy: #003366;
+  --dark: #0a0a0a;
+  --dark2: #111;
+  --dark3: #1a1a1a;
+  --white: #ffffff;
+  --gray: #aaaaaa;
+  --light-bg: #f8f9fa;
+  --radius: 15px;
+  --shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--dark);
+  color: var(--white);
+  font-family: 'Sora', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ===== HEADER / NAV ===== */
+header {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 2px solid var(--cyan);
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  padding: 0 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(14px, 2.2vw, 22px);
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--white), var(--green));
+  background-size: 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glow 5s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes glow {
+  0%   { background-position: 0%; }
+  100% { background-position: 300%; }
+}
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 6px;
+  z-index: 1100;
+}
+.hamburger span {
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--cyan);
+  border-radius: 2px;
+  transition: 0.3s;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+nav ul li a {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: 0.3s;
+  padding: 6px 2px;
+  border-bottom: 2px solid transparent;
+}
+
+nav ul li a:hover {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+/* ===== MOBILE NAV ===== */
+@media (max-width: 768px) {
+  .hamburger { display: flex; }
+
+  nav ul {
+    position: fixed;
+    top: 68px; right: 0;
+    width: 240px;
+    height: calc(100vh - 68px);
+    background: rgba(0,0,0,0.97);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 20px 0;
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
+    border-left: 2px solid var(--cyan);
+  }
+
+  nav ul.open { transform: translateX(0); }
+
+  nav ul li { width: 100%; }
+  nav ul li a {
+    display: block;
+    padding: 14px 28px;
+    font-size: 15px;
+    border-bottom: 1px solid #222;
+  }
+  nav ul li a:hover { background: rgba(0,240,255,0.06); }
+}
+
+/* ===== HERO ===== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 100px 20px 60px;
+  background:
+    linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)),
+    url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+  position: relative;
+}
+
+.hero-content { max-width: 700px; }
+
+.hero h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(30px, 6vw, 58px);
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+
+.hero h1 span { color: var(--cyan); }
+
+#typing {
+  display: block;
+  font-size: clamp(18px, 3.5vw, 28px);
+  color: var(--magenta);
+  min-height: 40px;
+  margin: 16px 0;
+  font-weight: 600;
+}
+
+.hero p {
+  color: var(--gray);
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 14px 32px;
+  background: var(--cyan);
+  color: #000;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 15px;
+  transition: 0.3s;
+  letter-spacing: 0.5px;
+}
+.btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 25px var(--cyan);
+}
+
+/* ===== SECTION DEFAULTS ===== */
+section {
+  padding: 80px 0;
+  width: 100%;
+}
+
+section h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(24px, 4vw, 36px);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* ===== ABOUT ===== */
+#about {
+  background: var(--dark2);
+  position: relative;
+  overflow: hidden;
+}
+
+#about::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(350px, 80vw);
+  height: min(350px, 80vw);
+  background: radial-gradient(circle, rgba(0,240,255,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ceo-voice-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto 40px;
+}
+
+.ceo-pulse-img {
+  width: clamp(160px, 35vw, 230px);
+  height: clamp(160px, 35vw, 230px);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--cyan);
+  cursor: pointer;
+  transition: 0.3s;
+  position: relative;
+  z-index: 2;
+}
+
+.ceo-pulse-img:hover { box-shadow: 0 0 30px var(--cyan); }
+
+.pulse-ring {
+  position: absolute;
+  width: clamp(160px, 35vw, 230px);
+  height: clamp(160px, 35vw, 230px);
+  border-radius: 50%;
+  background: rgba(0,123,255,0.4);
+  z-index: 1;
+  display: none;
+}
+
+.talking .pulse-ring {
+  display: block;
+  animation: ripple 1.5s infinite ease-out;
+}
+
+@keyframes ripple {
+  from { transform: scale(1); opacity: 1; }
+  to   { transform: scale(2.3); opacity: 0; }
+}
+
+.voice-btn {
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: #007bff;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+  font-family: 'Sora', sans-serif;
+}
+.voice-btn:hover { background: #0060cc; transform: scale(1.03); }
+
+.about-text {
+  text-align: justify;
+  line-height: 1.85;
+  color: #ccc;
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 15px;
+}
+.about-text p { margin-bottom: 14px; }
+.about-text strong { color: var(--white); }
+
+/* ===== SERVICES GRID ===== */
+#services { background: var(--dark); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.card {
+  background: var(--dark2);
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  border: 1px solid #2a2a2a;
+  font-weight: 600;
+  font-size: 15px;
+  transition: 0.35s;
+  text-align: center;
+}
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 0 20px rgba(0,240,255,0.25);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* ===== RESULT COMPILER ===== */
+#single-subject-compiler {
+  background: var(--light-bg);
+  color: #111;
+  padding: 60px 20px;
+}
+
+#single-subject-compiler h2 { color: #007bff; }
+#single-subject-compiler p { color: #444; }
+
+.compiler-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.compiler-controls input {
+  padding: 10px 16px;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  font-weight: 700;
+  text-align: center;
+  font-size: 14px;
+  font-family: 'Sora', sans-serif;
+  width: clamp(180px, 50vw, 260px);
+}
+
+.ctrl-btn {
+  padding: 11px 22px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  transition: 0.3s;
+}
+.ctrl-btn.add { background: #17a2b8; color: #fff; }
+.ctrl-btn.add:hover { background: #138496; }
+.ctrl-btn.print { background: #007bff; color: #fff; }
+.ctrl-btn.print:hover { background: #0060cc; }
+.ctrl-btn.analyse {
+  background: #28a745;
+  color: #fff;
+  padding: 14px 40px;
+  border-radius: 50px;
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(40,167,69,0.35);
+}
+.ctrl-btn.analyse:hover { background: #218838; transform: scale(1.03); }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+#resultTable {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+#resultTable thead tr { background: #343a40; color: #fff; }
+
+#resultTable th, #resultTable td {
+  padding: 11px 10px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+#resultTable th:nth-child(3),
+#resultTable th:nth-child(4),
+#resultTable th:nth-child(5) { background: #555; }
+#resultTable th:nth-child(6) { background: #444; }
+#resultTable th:nth-child(7),
+#resultTable th:nth-child(8),
+#resultTable th:nth-child(9) { background: #007bff; }
+
+#resultTable th { text-transform: uppercase; font-size: 12px; letter-spacing: 0.8px; }
+
+#resultTable input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px;
+  font-family: 'Sora', sans-serif;
+  transition: 0.3s;
+}
+#resultTable input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0,123,255,0.2);
+}
+
+.name-col-input { width: 100%; min-width: 120px; }
+.score-input    { width: 52px; text-align: center; }
+.exam-input     { width: 62px; text-align: center; background: #f0f7ff; font-weight: bold; }
+
+.total, .grade, .position {
+  font-weight: 700;
+  font-size: 15px;
+  color: #333;
+}
+
+/* ===== TEAM SCROLLER ===== */
+.team-section-wrapper {
+  background: var(--dark2);
+  padding: 60px 0;
+  overflow: hidden;
+}
+
+.scrolling-wrapper { width: 100%; overflow: hidden; }
+
+.scrolling-content {
+  display: flex;
+  gap: 50px;
+  width: max-content;
+  animation: scroll-team 25s linear infinite;
+}
+
+.scrolling-wrapper:hover .scrolling-content { animation-play-state: paused; }
+
+@keyframes scroll-team {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.instructor-circle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 190px;
+  flex-shrink: 0;
+}
+
+.instructor-circle-card img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 5px solid var(--gold);
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  margin-bottom: 14px;
+}
+
+.instructor-circle-card h3 {
+  font-size: 14px;
+  color: var(--white);
+  margin: 0;
+  text-align: center;
+}
+
+.instructor-circle-card p {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 600;
+  margin-top: 4px;
+  text-align: center;
+}
+
+/* ===== GALLERY ===== */
+#gallery { background: var(--dark3); }
+
+.gallery { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.gallery img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  transition: 0.4s;
+}
+.gallery img:hover { transform: scale(1.04); box-shadow: 0 0 20px var(--cyan); }
+
+/* ===== TESTIMONIALS ===== */
+.testimonial-card { font-style: italic; color: #ccc; font-size: 15px; }
+
+/* ===== COURSE SECTION ===== */
+.courses-section {
+  padding: 70px 20px;
+  background: linear-gradient(135deg, #cfb53b 0%, #e6e6e6 50%, #d4af37 100%);
+}
+
+.courses-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  padding: clamp(25px, 4vw, 40px);
+  border-radius: 20px;
+  border: 4px solid #b8860b;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+}
+
+.courses-inner h2 {
+  color: var(--navy);
+  text-align: center;
+  font-size: clamp(20px, 3.5vw, 30px);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.courses-subtitle {
+  text-align: center;
+  color: #444;
+  font-weight: 600;
+  margin-bottom: 32px;
+  font-size: 15px;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.course-card {
+  background: #fff;
+  padding: 22px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-top: 7px solid var(--gold);
+  transition: 0.3s;
+}
+.course-card:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.18); }
+.course-card h3 { color: var(--navy); margin-bottom: 8px; font-size: 16px; }
+.course-card p  { font-size: 13px; color: #666; min-height: 45px; margin-bottom: 14px; }
+.course-link {
+  display: block;
+  padding: 11px;
+  background: var(--gold);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: 0.3s;
+}
+.course-link:hover { background: #b8860b; }
+
+.courses-footer {
+  margin-top: 35px;
+  text-align: center;
+  border-top: 2px dashed #ddd;
+  padding-top: 20px;
+}
+.courses-footer p { color: var(--navy); font-style: italic; font-size: 14px; }
+.courses-footer a { color: #b8860b; font-weight: 700; text-decoration: underline; }
+
+/* ===== LIVE LECTURE ===== */
+.lecture-section {
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #cfb53b 0%, #e6e6e6 50%, #d4af37 100%);
+}
+
+.lecture-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #fff;
+  padding: clamp(20px, 4vw, 35px);
+  border-radius: 20px;
+  border: 4px solid #b8860b;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+  text-align: center;
+  color: #222;
+}
+
+.lecture-inner h2 { color: var(--navy); font-size: clamp(18px, 3vw, 26px); text-transform: uppercase; margin-bottom: 10px; }
+.lecture-inner > p { color: #444; font-weight: 600; margin-bottom: 20px; font-size: 14px; }
+
+.iframe-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 6px solid var(--navy);
+  background: #000;
+}
+.iframe-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+
+.lecture-tips {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  text-align: left;
+}
+
+.tip-card {
+  background: #f9f9f9;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #555;
+}
+.tip-card h4 { margin: 0 0 4px; }
+
+/* ===== FORMS ===== */
+.form-section {
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #cfb53b 0%, #e6e6e6 50%, #d4af37 100%);
+}
+
+.matured-form {
+  background: linear-gradient(135deg, #ffffff 40%, #d4af37 80%, #1b4332 100%);
+  padding: clamp(25px, 4vw, 40px);
+  border-radius: 28px;
+  border: 5px solid var(--gold);
+  margin: 0 auto 40px;
+  width: 100%;
+  max-width: 820px;
+  text-align: left;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.matured-form h2 {
+  color: var(--navy);
+  font-weight: 900;
+  font-size: clamp(20px, 3vw, 28px);
+  text-align: center;
+  text-transform: uppercase;
+  margin-bottom: 26px;
+  font-family: 'Sora', sans-serif;
+}
+
+.matured-form label {
+  color: var(--navy);
+  font-weight: 900;
+  font-size: clamp(14px, 2vw, 18px);
+  display: block;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.matured-form input,
+.matured-form select {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  font-size: clamp(14px, 2vw, 18px);
+  font-weight: 700;
+  border-radius: 13px;
+  border: 3px solid var(--dark-green);
+  background: #fff;
+  color: var(--navy);
+  margin-bottom: 22px;
+  font-family: 'Sora', sans-serif;
+  transition: 0.3s;
+}
+
+.matured-form input:focus,
+.matured-form select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(212,175,55,0.6);
+}
+
+.dob-nationality {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 480px) {
+  .dob-nationality { grid-template-columns: 1fr; }
+}
+
+.btn-big-rounded {
+  width: 100%;
+  min-height: 62px;
+  background: var(--navy);
+  color: #fff;
+  font-size: clamp(16px, 2.5vw, 22px);
+  font-weight: 900;
+  border-radius: 50px;
+  border: 4px solid var(--gold);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: 0.3s;
+  font-family: 'Sora', sans-serif;
+  letter-spacing: 1px;
+}
+.btn-big-rounded:hover { background: var(--dark-green); transform: scale(1.02); }
+
+/* ===== CONTACT ===== */
+#contact {
+  background: var(--dark2);
+  padding: 70px 20px;
+}
+
+#contact h2 { color: var(--cyan); }
+
+.contact-container {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.contact-container p {
+  font-size: 16px;
+  color: #ccc;
+  line-height: 1.7;
+}
+
+.contact-container strong { color: var(--white); }
+
+/* ===== TEAM STATIC ===== */
+.team-section {
+  background: var(--dark3);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.team-card img {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border-radius: var(--radius);
+  border: 3px solid var(--cyan);
+}
+.team-card h3 { font-size: 22px; margin-top: 16px; }
+.team-card p  { color: var(--gray); }
+
+/* ===== WHY CHOOSE ===== */
+.why-section { background: var(--dark2); }
+
+/* ===== FOOTER ===== */
+footer {
+  background: #0a0a0a;
+  padding: 30px 20px;
+  text-align: center;
+  border-top: 2px solid #222;
+}
+
+footer p { color: #888; font-size: 14px; margin-bottom: 12px; }
+
+footer a {
+  color: var(--cyan);
+  margin: 0 12px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
+footer a:hover { color: var(--magenta); }
+
+/* ===== VISITOR COUNTER ===== */
+.visitor-counter {
+  text-align: center;
+  padding: 22px;
+  background: #f0f0f0;
+  border-top: 2px solid var(--gold);
+  color: #222;
+}
+.visitor-counter p { font-size: 14px; margin-bottom: 6px; font-family: 'Sora', sans-serif; }
+.visitor-counter .sub { font-size: 11px; color: #999; margin-top: 4px; }
+
+/* ===== PRINT ===== */
+@media print {
+  .no-print, header, nav, footer, .ceo-voice-container,
+  .hero, #about, #services, #gallery, .team-section,
+  .why-section, .courses-section, .lecture-section,
+  .form-section, .team-section-wrapper, #contact, .visitor-counter {
+    display: none !important;
+  }
+  body { background: #fff !important; color: #000 !important; }
+  #single-subject-compiler {
+    border: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  #resultTable { font-size: 12px; }
+  .ctrl-btn { display: none !important; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <nav>
+    <div class="logo">Solex Gift Tech Academy</div>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </div>
+    <ul id="navMenu">
+      <li><a href="#home"     onclick="closeMenu()">Home</a></li>
+      <li><a href="#about"    onclick="closeMenu()">About</a></li>
+      <li><a href="#services" onclick="closeMenu()">Services</a></li>
+      <li><a href="#gallery"  onclick="closeMenu()">Gallery</a></li>
+      <li><a href="#contact"  onclick="closeMenu()">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <h1>Welcome to <span>Solex Gift</span></h1>
+    <span id="typing"></span>
+    <p>Your trusted digital solution center in Benue State.</p>
+    <a href="#contact" class="btn">Get Started</a>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section id="about">
+  <div class="container">
+    <h2>About Us</h2>
+
+    <div class="ceo-voice-container">
+      <div class="pulse-ring"></div>
+      <img src="image/ceo.png" alt="Engr. David Solomon" class="ceo-pulse-img" onclick="startTalking()">
+      <audio id="ceoAudio">
+        <source src="audio/welcome.mp3" type="audio/mpeg">
+      </audio>
+      <button onclick="startTalking()" class="voice-btn">▶ Hear Engr. David Speak</button>
+    </div>
+
+    <div class="about-text">
+      <p><strong>Good day everyone.</strong></p>
+      <p>My name is Engr. David Solomon, a co-founder of SolexGift Tech Academy, alongside my beautiful lady, Gift. We are both proud indigenes of Okokolo Agatu community in Benue State.</p>
+      <p>It is with great joy that we welcome you to SolexGift Tech Academy. Here, we focus on practical teaching and real skills acquisition in technology. Our mission is to empower young minds and individuals with hands-on knowledge that can create opportunities and build a better future.</p>
+      <p>At SolexGift Tech Academy, this platform gives you access to a lot of educational videos that will help boost your tech knowledge in areas such as website design and development, data analysis, video editing, office packages, and many more.</p>
+      <p>We encourage you to tell your friends and colleagues about us. Right here on this site, online lectures will also be available for people who want to improve their tech skills through free online classes.</p>
+      <p>At SolexGift Tech Academy, learning is not just theory — we believe in practice, innovation, and excellence. We are glad to have you with us, and we assure you that your journey here will be impactful and rewarding.</p>
+      <p>Once again, you are highly welcome to SolexGift Tech Academy. Thank you.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section id="services">
+  <div class="container">
+    <h2>Our Services</h2>
+    <div class="grid">
+      <div class="card">💻 Computer Training</div>
+      <div class="card">🖨️ Printing &amp; Photocopy</div>
+      <div class="card">🎨 Graphic Design</div>
+      <div class="card">📄 Typing &amp; CV Creation</div>
+      <div class="card">🌐 Internet Browsing</div>
+      <div class="card">🔧 Repairs &amp; Maintenance</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESULT COMPILER ===== -->
+<section id="single-subject-compiler">
+  <div class="container">
+    <h2>SOLEX GIFT TECH ACADEMY</h2>
+    <p style="text-align:center; font-weight:bold; margin-bottom:22px;">Subject Result Sheet</p>
+
+    <div class="compiler-controls no-print">
+      <input type="text" id="subjectHeader" placeholder="Subject Name (e.g. ICT)">
+      <button class="ctrl-btn add" onclick="addRow()">+ Add Student</button>
+      <button class="ctrl-btn print no-print" onclick="window.print()">🖨️ Print Sheet</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th style="width:46px;">S/N</th>
+            <th>Student Name</th>
+            <th>CA 1</th>
+            <th>CA 2</th>
+            <th>CA 3</th>
+            <th>Exam</th>
+            <th>Total</th>
+            <th>Grade</th>
+            <th>Position</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td class="serial-number" style="font-weight:bold;">1</td>
+            <td><input type="text" class="name-col-input name-input" placeholder="Full Name"></td>
+            <td><input type="number" class="score-input score ca1" oninput="capVal(this,10)" placeholder="10"></td>
+            <td><input type="number" class="score-input score ca2" oninput="capVal(this,10)" placeholder="10"></td>
+            <td><input type="number" class="score-input score ca3" oninput="capVal(this,10)" placeholder="10"></td>
+            <td><input type="number" class="exam-input score exam" oninput="capVal(this,70)" placeholder="70"></td>
+            <td class="total">-</td>
+            <td class="grade">-</td>
+            <td class="position">-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:28px; text-align:center;" class="no-print">
+      <button class="ctrl-btn analyse" onclick="analyseResults()">ANALYSE RESULTS</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TEAM SCROLLER ===== -->
+<div class="team-section-wrapper">
+  <div class="container">
+    <h2 style="font-family:'Orbitron',sans-serif; margin-bottom:36px;">Meet Our Expert Team</h2>
+  </div>
+  <div class="scrolling-wrapper">
+    <div class="scrolling-content" id="scrollTrack">
+      <!-- duplicated for seamless loop -->
+      <div class="instructor-circle-card">
+        <img src="image/instructor1.png" alt="David Solomon">
+        <h3>Mr. David Solomon</h3>
+        <p>Founder / Lead Developer</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor2.jpg" alt="David Yakubu">
+        <h3>Educator David Yakubu</h3>
+        <p>Academic Dean</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor3.png" alt="Gift Shaibu">
+        <h3>Miss Gift E. Shaibu</h3>
+        <p>Digital Queen</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor4.jpg" alt="Imewa Success">
+        <h3>Mr. Imewa Success</h3>
+        <p>Head of Graphics</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor5.png" alt="Johnson Yakubu">
+        <h3>Mr. Johnson Yakubu</h3>
+        <p>QA Tester</p>
+      </div>
+      <!-- duplicate set for seamless loop -->
+      <div class="instructor-circle-card">
+        <img src="image/instructor1.png" alt="David Solomon">
+        <h3>Mr. David Solomon</h3>
+        <p>Founder / Lead Developer</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor2.jpg" alt="David Yakubu">
+        <h3>Educator David Yakubu</h3>
+        <p>Academic Dean</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor3.png" alt="Gift Shaibu">
+        <h3>Miss Gift E. Shaibu</h3>
+        <p>Digital Queen</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor4.jpg" alt="Imewa Success">
+        <h3>Mr. Imewa Success</h3>
+        <p>Head of Graphics</p>
+      </div>
+      <div class="instructor-circle-card">
+        <img src="image/instructor5.png" alt="Johnson Yakubu">
+        <h3>Mr. Johnson Yakubu</h3>
+        <p>QA Tester</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WHY CHOOSE US ===== -->
+<section class="why-section">
+  <div class="container">
+    <h2>Why Choose Us</h2>
+    <div class="grid">
+      <div class="card">⚡ Fast Delivery</div>
+      <div class="card">💰 Affordable Price</div>
+      <div class="card">🏆 Professional Team</div>
+      <div class="card">✅ Quality Services</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section id="gallery">
+  <div class="container">
+    <h2>Gallery</h2>
+    <div class="grid gallery">
+      <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80" alt="Working at computer">
+      <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80" alt="Design work">
+      <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80" alt="Tech setup">
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section style="background: var(--dark);">
+  <div class="container">
+    <h2>Testimonials</h2>
+    <div class="grid">
+      <div class="card testimonial-card">"Excellent service and quick response from a very capable team."</div>
+      <div class="card testimonial-card">"Best computer training center around. I learned so much!"</div>
+      <div class="card testimonial-card">"Affordable, professional and truly world-class work."</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TEAM STATIC ===== -->
+<section class="team-section">
+  <div class="team-card">
+    <img src="image/ceo.png" alt="Solex Gift Computer Center">
+    <h3>Solex Gift Computer Center</h3>
+    <p>Founder &amp; ICT Specialist</p>
+  </div>
+</section>
+
+<!-- ===== FREE COURSES ===== -->
+<div class="courses-section">
+  <div class="courses-inner">
+    <h2>🌟 SolexGift Multi-Tech Academy 🌟</h2>
+    <p class="courses-subtitle">Select a Course to Start Learning for Free</p>
+
+    <div class="courses-grid">
+      <div class="course-card" style="border-top-color:#cfb53b;">
+        <h3>Excel &amp; Data Analysis</h3>
+        <p>Master formulas, pivot tables, and professional data reporting.</p>
+        <a href="https://www.youtube.com/results?search_query=excel+data+analysis+full+course+2026" target="_blank" class="course-link" style="background:#cfb53b;">Open Course →</a>
+      </div>
+      <div class="course-card" style="border-top-color:#c0c0c0;">
+        <h3>Video Editing &amp; Design</h3>
+        <p>Learn CapCut, Premiere Pro, and professional YouTube editing.</p>
+        <a href="https://www.youtube.com/results?search_query=video+editing+full+course+2026" target="_blank" class="course-link" style="background:#888; color:#fff;">Open Course →</a>
+      </div>
+      <div class="course-card" style="border-top-color:#cd7f32;">
+        <h3>Office App Packages</h3>
+        <p>Complete training on MS Word, PowerPoint, and Outlook.</p>
+        <a href="https://www.youtube.com/results?search_query=microsoft+office+full+course+2026" target="_blank" class="course-link" style="background:#cd7f32;">Open Course →</a>
+      </div>
+      <div class="course-card" style="border-top-color:#cfb53b;">
+        <h3>Web Dev &amp; Coding</h3>
+        <p>Learn HTML, CSS, and how to host websites on GitHub.</p>
+        <a href="https://www.youtube.com/results?search_query=web+development+course+for+beginners+2026" target="_blank" class="course-link" style="background:#cfb53b;">Open Course →</a>
+      </div>
+    </div>
+
+    <div class="courses-footer">
+      <p>"Education is the most powerful weapon which you can use to change the world."</p>
+      <a href="https://wa.me/2349022587127">Contact the Instructor for Certifications</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LIVE LECTURE ===== -->
+<div class="lecture-section">
+  <div class="lecture-inner">
+    <h2>🎙️ SolexGift Live Video Lecture 🎙️</h2>
+    <p>Join the live session below. Turn on your camera to participate!</p>
+    <div class="iframe-wrap">
+      <iframe
+        src="https://meet.jit.si/SolexGiftTechAcademyLectures"
+        allow="camera; microphone; fullscreen; display-capture; autoplay">
+      </iframe>
+    </div>
+    <div class="lecture-tips">
+      <div class="tip-card">
+        <h4 style="color:#b8860b;">For Students:</h4>
+        Click <strong>Join Meeting</strong>. Use a headset for the best audio during the lecture.
+      </div>
+      <div class="tip-card">
+        <h4 style="color:#003366;">Screen Sharing:</h4>
+        The instructor will share their screen to teach <strong>Excel</strong> and <strong>Data Analysis</strong> live.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FORMS ===== -->
+<div class="form-section">
+  <div class="matured-form">
+    <h2>🎓 Student Registration</h2>
+    <form action="https://formspree.io/f/xyklllkk" method="POST" enctype="multipart/form-data">
+      <label>Full Name</label>
+      <input type="text" name="Student Name" required placeholder="Enter your full name">
+
+      <div class="dob-nationality">
+        <div>
+          <label>Date of Birth</label>
+          <input type="date" name="DOB" required>
+        </div>
+        <div>
+          <label>Nationality</label>
+          <input type="text" name="Nationality" placeholder="e.g. Nigerian">
+        </div>
+      </div>
+
+      <label>Course of Interest</label>
+      <select name="Course">
+        <option>Computer Training</option>
+        <option>Graphic Design</option>
+        <option>Web Development</option>
+      </select>
+
+      <label>Upload Passport</label>
+      <input type="file" name="Passport" accept="image/*">
+
+      <button type="submit" class="btn-big-rounded">REGISTER NOW</button>
+    </form>
+  </div>
+
+  <div class="matured-form">
+    <h2>🛠️ Service Request</h2>
+    <form action="https://formspree.io/f/xyklllkk" method="POST">
+      <label>Client Name</label>
+      <input type="text" name="Client Name" required placeholder="Your full name">
+
+      <label>Service Needed</label>
+      <select name="Service">
+        <option>Printing &amp; Photocopy</option>
+        <option>Online Registration</option>
+        <option>Computer Repairs</option>
+      </select>
+
+      <label>Urgency</label>
+      <select name="Urgency">
+        <option>Normal</option>
+        <option>Urgent (Same Day)</option>
+      </select>
+
+      <button type="submit" class="btn-big-rounded" style="background:#1b4332;">SUBMIT REQUEST</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== CONTACT ===== -->
+<section id="contact">
+  <div class="container">
+    <h2>Contact Us</h2>
+    <div class="contact-container">
+      <p>📍 <strong>Address:</strong> SolexGift Tech Hub, Okokolo, Agatu, Benue State, Nigeria</p>
+      <p>📞 <strong>Phone:</strong> +234 9022587127, 07035765331</p>
+      <p>📧 <strong>Email:</strong> solexgift@gmail.com</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p>© 2026 SolexGift Tech Academy — All Rights Reserved</p>
+  <a href="#">Facebook</a>
+  <a href="#">WhatsApp</a>
+  <a href="#">Instagram</a>
+</footer>
+
+<!-- ===== VISITOR COUNTER ===== -->
+<div class="visitor-counter">
+  <p style="color:#003366; font-weight:bold;">Total Tech Hub Visitors:</p>
+  <img src="https://hitwebcounter.com/counter/counter.php?page=SolexGift2026&style=0001&nbdigits=5&type=page&initCount=0" title="Free Counter" alt="web counter" style="border:0; margin:6px 0;">
+  <p class="sub">Real-time Traffic Tracking</p>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+/* --- HAMBURGER MENU --- */
+function toggleMenu() {
+  document.getElementById('navMenu').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('navMenu').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+/* --- TYPING EFFECT --- */
+const words = ["Computer Training","Printing Services","Graphic Design","Internet Browsing","System Repairs"];
+let i=0, j=0, deleting=false;
+
+function typeEffect(){
+  const el = document.getElementById("typing");
+  if (!el) return;
+  let text = words[i];
+  el.textContent = text.substring(0, j);
+
+  if (!deleting) {
+    j++;
+    if (j > text.length) { deleting = true; setTimeout(typeEffect, 1000); return; }
+  } else {
+    j--;
+    if (j === 0) { deleting = false; i = (i + 1) % words.length; }
+  }
+  setTimeout(typeEffect, deleting ? 60 : 120);
+}
+typeEffect();
+
+/* --- RESULT COMPILER HELPERS --- */
+function capVal(input, max) {
+  let v = parseFloat(input.value);
+  if (!isNaN(v) && v > max) input.value = max;
+  if (!isNaN(v) && v < 0)   input.value = 0;
+}
+
+function updateSerialNumbers() {
+  document.querySelectorAll('#tableBody tr').forEach((row, idx) => {
+    row.querySelector('.serial-number').innerText = idx + 1;
+  });
+}
+
+function addRow() {
+  const tbody = document.getElementById('tableBody');
+  const newRow = tbody.rows[0].cloneNode(true);
+  newRow.querySelectorAll('input').forEach(inp => inp.value = "");
+  newRow.querySelectorAll('.total, .grade, .position').forEach(td => td.innerText = "-");
+  tbody.appendChild(newRow);
+  updateSerialNumbers();
+}
+
+function getGradeFromTotal(total) {
+  if (total >= 70) return "A";
+  if (total >= 60) return "B";
+  if (total >= 50) return "C";
+  if (total >= 45) return "D";
+  if (total >= 40) return "E";
+  return "F";
+}
+
+function analyseResults() {
+  const rows = document.getElementById('tableBody').rows;
+  let scoresList = [];
+
+  for (let r = 0; r < rows.length; r++) {
+    let ca1  = parseFloat(rows[r].querySelector('.ca1').value)  || 0;
+    let ca2  = parseFloat(rows[r].querySelector('.ca2').value)  || 0;
+    let ca3  = parseFloat(rows[r].querySelector('.ca3').value)  || 0;
+    let exam = parseFloat(rows[r].querySelector('.exam').value) || 0;
+    let total = ca1 + ca2 + ca3 + exam;
+    rows[r].querySelector('.total').innerText = total;
+    rows[r].querySelector('.grade').innerText = getGradeFromTotal(total);
+    scoresList.push({ index: r, totalscore: total });
+  }
+
+  let uniqueScores = [...new Set(scoresList.map(s => s.totalscore))].sort((a, b) => b - a);
+  scoresList.forEach(student => {
+    rows[student.index].querySelector('.position').innerText = uniqueScores.indexOf(student.totalscore) + 1;
+  });
+
+  try { localStorage.setItem('savedResults', document.getElementById('tableBody').innerHTML); } catch(e){}
+}
+
+/* --- AUTO-RESTORE SAVED RESULTS --- */
+window.addEventListener('load', function() {
+  try {
+    const saved = localStorage.getItem('savedResults');
+    if (saved) {
+      document.getElementById('tableBody').innerHTML = saved;
+      updateSerialNumbers();
+    }
+  } catch(e) {}
+});
+
+/* --- CEO VOICE --- */
+function startTalking() {
+  const audio = document.getElementById('ceoAudio');
+  const container = document.querySelector('.ceo-voice-container');
+  if (!audio) return;
+  if (audio.paused) {
+    audio.play().catch(() => {});
+    container.classList.add('talking');
+    audio.onended = () => container.classList.remove('talking');
+  } else {
+    audio.pause();
+    container.classList.remove('talking');
+  }
+}
+</script>
+
+</body>
+</html>
